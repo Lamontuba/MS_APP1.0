@@ -10,9 +10,11 @@ import {
   X,
   TrendingUp,
   Target,
-  Layers
+  Layers,
+  ChevronRight
 } from 'lucide-react';
 import FastApp from "@/components/tools/FastApp";
+import DashboardTool from "@/components/tools/DashboardTool"; // Import the DashboardTool component
 
 type ToolSection = {
   id: string;
@@ -34,77 +36,65 @@ const MerchantAppLayout = () => {
     {
       id: "dashboard",
       label: "Dashboard",
-      icon: <Home className="w-10 h-10 text-white opacity-80" />,
-      accent: "from-blue-500 to-blue-700",
+      icon: <Home className="w-10 h-10 text-white drop-shadow-glow" />,
+      accent: "from-cyan-400 via-blue-500 to-blue-600",
       description: 'Performance overview',
-      component: <div>Dashboard Content</div>,
-      statsIcon: <TrendingUp className="w-10 h-10 text-blue-300 opacity-70" />,
-      stats: [
-        { label: 'Revenue', value: '$124,350' },
-        { label: 'Leads', value: '42' }
-      ]
+      component: <DashboardTool />,  // Import the DashboardTool component
+      statsIcon: <TrendingUp className="w-10 h-10 text-cyan-300 drop-shadow-glow" />,
+      stats: [{ label: 'Revenue', value: '$124,350' }, { label: 'Leads', value: '42' }]
     },
     {
       id: "leads",
       label: "Leads",
-      icon: <Users className="w-10 h-10 text-white opacity-80" />,
-      accent: "from-pink-500 to-pink-700",
+      icon: <Users className="w-10 h-10 text-white drop-shadow-glow" />,
+      accent: "from-fuchsia-500 via-purple-500 to-violet-600",
       description: 'Lead management',
       component: <div>Leads Content</div>,
-      statsIcon: <Target className="w-10 h-10 text-pink-300 opacity-70" />,
-      stats: [
-        { label: 'Active', value: '53' },
-        { label: 'Value', value: '$780K' }
-      ]
+      statsIcon: <Target className="w-10 h-10 text-fuchsia-300 drop-shadow-glow" />,
+      stats: [{ label: 'Active', value: '53' }, { label: 'Value', value: '$780K' }]
     },
     {
       id: "analysis",
       label: "Analysis",
-      icon: <BarChart2 className="w-10 h-10 text-white opacity-80" />,
-      accent: "from-indigo-500 to-indigo-700",
+      icon: <BarChart2 className="w-10 h-10 text-white drop-shadow-glow" />,
+      accent: "from-purple-400 via-violet-500 to-fuchsia-600",
       description: 'Data insights',
       component: <div>Analysis Content</div>,
-      statsIcon: <Layers className="w-10 h-10 text-indigo-300 opacity-70" />,
-      stats: [
-        { label: 'Reports', value: '12' },
-        { label: 'Growth', value: '24%' }
-      ]
+      statsIcon: <Layers className="w-10 h-10 text-purple-300 drop-shadow-glow" />,
+      stats: [{ label: 'Reports', value: '12' }, { label: 'Growth', value: '24%' }]
     },
     {
       id: "fastapp",
       label: "FastApp",
-      icon: <FilePlus className="w-10 h-10 text-white opacity-80" />,
-      accent: "from-green-500 to-green-700",
+      icon: <FilePlus className="w-10 h-10 text-white drop-shadow-glow" />,
+      accent: "from-rose-400 via-pink-500 to-purple-600",
       description: 'Quick actions',
       component: <FastApp />,
-      statsIcon: <FilePlus className="w-10 h-10 text-green-300 opacity-70" />,
-      stats: [
-        { label: 'Pending', value: '8' },
-        { label: 'Complete', value: '16' }
-      ]
+      statsIcon: <FilePlus className="w-10 h-10 text-rose-300 drop-shadow-glow" />,
+      stats: [{ label: 'Pending', value: '8' }, { label: 'Complete', value: '16' }]
     }
   ];
 
   return (
-    <div className="bg-black text-white h-screen w-full flex flex-col overflow-hidden">
+    <div className="bg-zinc-950 text-white min-h-screen w-full flex flex-col overflow-hidden">
       {/* Top Navigation */}
-      <div className="bg-neutral-900/90 backdrop-blur-xl p-4 flex justify-between items-center border-b border-neutral-800">
+      <div className="bg-black/40 backdrop-blur-2xl p-4 flex justify-between items-center border-b border-white/5">
         <button 
           onClick={() => setIsSidebarVisible(!isSidebarVisible)}
-          className="p-2 rounded-full hover:bg-neutral-800 transition"
+          className="p-2 rounded-xl hover:bg-white/5 transition-all duration-300"
         >
           {isSidebarVisible ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
-        <h1 className="text-xl font-semibold tracking-tight">Merchant</h1>
+        <h1 className="text-xl font-medium tracking-tight">Merchant <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400">OS</span></h1>
         <div className="w-10" />
       </div>
 
       <div className="flex-1 relative overflow-hidden">
         {/* Sidebar */}
         {isSidebarVisible && (
-          <div className="absolute left-0 top-0 h-full w-64 bg-neutral-900/90 backdrop-blur-xl z-50 border-r border-neutral-800">
+          <div className="absolute left-0 top-0 h-full w-72 bg-black/40 backdrop-blur-2xl z-50 border-r border-white/5">
             <div className="p-4">
-              <h2 className="text-xl font-semibold mb-6">Tools</h2>
+              <h2 className="text-xl font-medium mb-8 ml-2">Tools</h2>
               {sections.map((section) => (
                 <button 
                   key={section.id}
@@ -114,13 +104,20 @@ const MerchantAppLayout = () => {
                     setActiveModal(section.id);
                   }}
                   className={`
-                    w-full text-left p-3 rounded-xl mb-2 
-                    transition-all duration-300 flex items-center
-                    ${activeSection === section.id ? 'bg-white/10' : 'hover:bg-white/5'}
+                    w-full text-left p-4 rounded-2xl mb-2 
+                    transition-all duration-500 flex items-center justify-between
+                    hover:scale-[0.98] group
+                    ${activeSection === section.id 
+                      ? 'bg-gradient-to-r from-white/10 to-white/5 text-white' 
+                      : 'hover:bg-white/5 text-white/70'
+                    }
                   `}
                 >
-                  <span className="mr-3 opacity-70">{section.icon}</span>
-                  <span>{section.label}</span>
+                  <div className="flex items-center">
+                    <span className="mr-3">{section.icon}</span>
+                    <span className="font-medium">{section.label}</span>
+                  </div>
+                  <ChevronRight className="w-5 h-5 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0" />
                 </button>
               ))}
             </div>
@@ -128,37 +125,53 @@ const MerchantAppLayout = () => {
         )}
 
         {/* Grid Layout */}
-        <div className="p-4 grid grid-cols-2 gap-4">
+        <div className="p-6 grid grid-cols-2 gap-6">
           {sections.map((section) => (
             <div
               key={section.id}
               onClick={() => setActiveModal(section.id)}
               className={`
-                bg-gradient-to-br ${section.accent}
-                rounded-3xl p-6
+                bg-black/40 backdrop-blur-2xl
+                rounded-3xl p-8
                 cursor-pointer
-                transform transition-all duration-300
-                hover:scale-105
+                transform transition-all duration-500
+                hover:scale-[0.98] group
+                relative overflow-hidden
+                border border-white/20
+                shadow-lg hover:shadow-2xl
+                hover:border-white/30
+                after:absolute after:inset-0 after:bg-gradient-to-br after:from-white/5 after:to-white/0
+                before:absolute before:inset-0 before:bg-gradient-to-br ${section.accent} before:opacity-40 before:group-hover:opacity-50
               `}
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  {section.icon}
-                  <h3 className="text-xl font-bold mt-4">{section.label}</h3>
-                  <p className="text-sm opacity-70">{section.description}</p>
-                </div>
-                {section.statsIcon}
-              </div>
-              {section.stats && (
-                <div className="mt-6 flex justify-between">
-                  {section.stats.map((stat, i) => (
-                    <div key={i}>
-                      <p className="text-xs opacity-60">{stat.label}</p>
-                      <p className="text-lg font-bold">{stat.value}</p>
+              <div className="relative z-10">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="group-hover:animate-pulse">
+                      {section.icon}
                     </div>
-                  ))}
+                    <h3 className="text-2xl font-bold mt-4 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70">
+                      {section.label}
+                    </h3>
+                    <p className="text-sm text-white/70 mt-1">{section.description}</p>
+                  </div>
+                  <div className="opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:animate-pulse">
+                    {section.statsIcon}
+                  </div>
                 </div>
-              )}
+                {section.stats && (
+                  <div className="mt-8 flex justify-between">
+                    {section.stats.map((stat, i) => (
+                      <div key={i}>
+                        <p className="text-xs text-white/70">{stat.label}</p>
+                        <p className="text-xl font-bold mt-1 bg-clip-text text-transparent bg-gradient-to-r from-white to-white/90 tracking-tight">
+                          {stat.value}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -167,20 +180,20 @@ const MerchantAppLayout = () => {
       {/* Modal */}
       {activeModal && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-xl flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-50 p-4"
           onClick={() => setActiveModal(null)}
         >
           <div
-            className="bg-neutral-900 w-full max-w-4xl h-[85vh] rounded-2xl shadow-2xl overflow-hidden"
+            className="bg-zinc-900/80 backdrop-blur-xl w-full max-w-4xl h-[85vh] rounded-3xl shadow-2xl overflow-hidden border border-white/10"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-neutral-800/50 p-4 flex justify-between items-center border-b border-neutral-700">
-              <h2 className="text-2xl font-semibold">
+            <div className="bg-black/40 p-4 flex justify-between items-center border-b border-white/5">
+              <h2 className="text-2xl font-medium">
                 {sections.find(s => s.id === activeModal)?.label}
               </h2>
               <button
                 onClick={() => setActiveModal(null)}
-                className="bg-neutral-700/50 hover:bg-neutral-600/50 rounded-full p-2"
+                className="hover:bg-white/5 rounded-xl p-2 transition-colors duration-300"
               >
                 <X className="w-6 h-6" />
               </button>
