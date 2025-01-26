@@ -1,119 +1,85 @@
 "use client";
-
 import React, { useState } from "react";
 
 const FastApp = () => {
-  // State for form fields
-  const [formData, setFormData] = useState({
-    businessName: "",
-    email: "",
-    phone: "",
-    address: "",
-  });
+ const [formData, setFormData] = useState({
+   businessName: "",
+   email: "",
+   phone: "",
+   address: "",
+ });
+ const [submitted, setSubmitted] = useState(false);
 
-  const [submitted, setSubmitted] = useState(false);
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   const { name, value } = e.target;
+   setFormData({ ...formData, [name]: value });
+ };
 
-  // Handle form input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+   e.preventDefault();
+   console.log("Form submitted:", formData);
+   setSubmitted(true);
+   setFormData({ businessName: "", email: "", phone: "", address: "" });
+ };
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Form submitted:", formData);
-    setSubmitted(true);
-    setFormData({
-      businessName: "",
-      email: "",
-      phone: "",
-      address: "",
-    });
-  };
+ const inputClasses = `
+   mt-1 block w-full p-2 
+   bg-zinc-800/50 border border-zinc-700 
+   rounded-md text-zinc-100 
+   placeholder-zinc-500 
+   focus:outline-none focus:border-zinc-600 
+   hover:shadow-[0_0_10px_rgba(212,175,55,0.1)] 
+   transition-all duration-200 
+   hover:bg-zinc-800/70 
+   [&:autofill]:!bg-zinc-800/70 
+   [&:autofill]:!text-zinc-100
+   [&:-webkit-autofill]:!bg-zinc-800/70 
+   [&:-webkit-autofill]:!text-zinc-100
+   [&:-webkit-autofill:hover]:!bg-zinc-800/70
+   [&:-webkit-autofill:focus]:!bg-zinc-800/70
+ `;
 
-  return (
-    <div className="bg-white text-black p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl font-bold mb-4">Merchant Onboarding</h2>
-      {!submitted ? (
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label htmlFor="businessName" className="block text-sm font-medium text-gray-700">
-              Business Name
-            </label>
-            <input
-              type="text"
-              id="businessName"
-              name="businessName"
-              value={formData.businessName}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-              Phone
-            </label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div className="mb-4">
-            <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-              Address
-            </label>
-            <input
-              type="text"
-              id="address"
-              name="address"
-              value={formData.address}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-200"
-          >
-            Submit
-          </button>
-        </form>
-      ) : (
-        <div className="text-center">
-          <h3 className="text-lg font-semibold">Thank you for onboarding!</h3>
-          <p className="text-sm text-gray-600">We have received your details.</p>
-          <button
-            onClick={() => setSubmitted(false)}
-            className="mt-4 bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition duration-200"
-          >
-            Onboard Another Merchant
-          </button>
-        </div>
-      )}
-    </div>
-  );
+ return (
+   <div className="bg-zinc-900/50 text-white p-6 rounded-xl border border-zinc-800">
+     <h2 className="text-2xl font-bold mb-4">Merchant Onboarding</h2>
+     {!submitted ? (
+       <form onSubmit={handleSubmit}>
+         {[
+           { id: "businessName", label: "Business Name", type: "text" },
+           { id: "email", label: "Email", type: "email" },
+           { id: "phone", label: "Phone", type: "tel" },
+           { id: "address", label: "Address", type: "text" }
+         ].map(field => (
+           <div key={field.id} className="mb-4">
+             <label htmlFor={field.id} className="block text-sm font-medium text-zinc-300">
+               {field.label}
+             </label>
+             <input
+               type={field.type}
+               id={field.id}
+               name={field.id}
+               value={formData[field.id as keyof typeof formData]}
+               onChange={handleChange}
+               required
+               className={inputClasses}
+             />
+           </div>
+         ))}
+         <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-md transition duration-200">
+           Submit
+         </button>
+       </form>
+     ) : (
+       <div className="text-center">
+         <h3 className="text-lg font-semibold">Thank you for onboarding!</h3>
+         <p className="text-sm text-zinc-400">We have received your details.</p>
+         <button onClick={() => setSubmitted(false)} className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-md transition duration-200">
+           Onboard Another Merchant
+         </button>
+       </div>
+     )}
+   </div>
+ );
 };
 
 export default FastApp;

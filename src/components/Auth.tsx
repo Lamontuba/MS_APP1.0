@@ -1,14 +1,15 @@
 // src/components/Auth.tsx
-"use client"
+"use client";
 import { auth, googleProvider } from '@/lib/firebase';
 import { signInWithPopup } from 'firebase/auth';
+import { FirebaseError } from 'firebase/app'; // Import FirebaseError
 
 export default function Auth() {
   const signInWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
+    } catch (error: unknown) { // Replace `any` with `unknown`
+      if ((error as FirebaseError).code !== 'auth/popup-closed-by-user') {
         console.error(error);
       }
     }
