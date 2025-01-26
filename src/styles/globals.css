@@ -1,5 +1,21 @@
 @layer utilities {
-    .drop-shadow-glow {
-      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
-    }
+  .drop-shadow-glow {
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
   }
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+-webkit-background-clip: text !important;
+-webkit-text-fill-color: rgb(244 244 245) !important;
+box-shadow: inset 0 0 20px 20px rgb(39 39 42 / 0.7) !important;
+background-color: rgb(39 39 42 / 0.7) !important;
+caret-color: white;
+}
+
+input:autofill {
+background-color: rgb(39 39 42 / 0.7) !important;
+color: rgb(244 244 245) !important;
+}
