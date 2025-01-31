@@ -16,6 +16,7 @@
     "openai": "^4.80.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-signature-canvas": "^1.0.7",
     "recharts": "^2.15.0"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/react-signature-canvas": "^1.0.6",
     "@types/recharts": "^1.8.29",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",

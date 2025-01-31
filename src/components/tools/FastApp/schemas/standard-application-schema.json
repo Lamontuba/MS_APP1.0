@@ -1,0 +1,44 @@
+{
+    "title": "Standard Application",
+    "type": "object",
+    "properties": {
+      "businessInfo": {
+        "type": "object",
+        "properties": {
+          "businessName": {
+            "type": "string",
+            "title": "Business Name"
+          },
+          "businessType": {
+            "type": "string",
+            "title": "Business Type",
+            "enum": [
+              "Sole Proprietorship",
+              "Partnership", 
+              "Corporation",
+              "LLC"
+            ]
+          }
+          
+        },
+        "required": ["businessName", "businessType"]
+      },
+      "ownerInfo": {
+        "type": "object",
+        "properties": {
+          "ownerName": {
+            "type": "string",
+            "title": "Owner Name"  
+          },
+          "ownerEmail": {
+            "type": "string",
+            "title": "Owner Email",
+            "format": "email"
+          }
+          
+        },
+        "required": ["ownerName", "ownerEmail"]
+      }
+      
+    }
+  }

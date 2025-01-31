@@ -6,7 +6,7 @@ import {
   Menu, X, TrendingUp, Target, 
   Layers, ChevronRight, LogOut 
 } from 'lucide-react';
-import FastApp from "@/components/tools/FastApp";
+import FastApp from "@/components/tools/FastApp/FastApp";
 import DashboardTool from "@/components/tools/DashboardTool";
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
