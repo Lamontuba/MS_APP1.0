@@ -28,6 +28,7 @@
         },
         "required": ["accountNumber", "routingNumber"]
       }
+      
     ]
   }
   

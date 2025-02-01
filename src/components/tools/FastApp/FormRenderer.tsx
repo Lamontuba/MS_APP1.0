@@ -1,55 +1,84 @@
+// File: FormRenderer.tsx
 import React from 'react';
 
 interface FormRendererProps {
-  schema: Record<string, any>;           // Adjust this type to match your schema
-  formData: any;                         // Adjust this type for formData if needed
-  onChange: (updatedFormData: any) => void;
+  schema: Record<string, any>;
+  formData: Record<string, any>;
+  onChange: (updatedData: Record<string, any>) => void;
 }
 
-/**
- * The FormRenderer component iterates over each section of the schema
- * and renders the corresponding form fields. It expects:
- *
- * - schema: the form structure
- * - formData: the current data for all form fields
- * - onChange: a callback to update formData in the parent
- */
 const FormRenderer: React.FC<FormRendererProps> = ({
   schema,
   formData,
   onChange,
 }) => {
-  /**
-   * Renders a single section of the form.
-   * @param section The schema for this particular section
-   * @param sectionKey A unique identifier for the section (used for keys)
-   */
-  const renderSection = (section: any, sectionKey: string) => {
-    // Example logic — you’ll customize based on how your form is structured:
-    // If each "section" contains fields, map over them here.
+  if (!schema || !schema.properties) {
+    return <div>No valid schema was provided.</div>;
+  }
 
-    return (
-      <div>
-        <h2>{section.title ?? sectionKey}</h2>
-        {/* 
-          Render the fields inside this section. For example:
-          if (section.properties) {
-            return Object.keys(section.properties).map((field) => (...))
-          }
-        */}
-      </div>
-    );
+  const handleFieldChange = (fieldKey: string, value: any) => {
+    onChange({
+      ...formData,
+      [fieldKey]: value,
+    });
   };
 
   return (
     <div>
-      {/* Map over each entry in 'schema' and render a section for it */}
-      {Object.entries(schema).map(([sectionKey, section]) => (
-        // Important: give each top-level child a unique key
-        <div key={sectionKey}>
-          {renderSection(section, sectionKey)}
-        </div>
-      ))}
+      {/* If the schema step has a title, show it here (optional) */}
+      {schema.title && (
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          {schema.title}
+        </h2>
+      )}
+
+      {Object.entries(schema.properties).map(([fieldKey, fieldDef]: [string, any]) => {
+        const fieldValue = formData[fieldKey] || '';
+        const isRequired = schema.required?.includes(fieldKey);
+        const labelText = (fieldDef.title || fieldKey) + (isRequired ? ' *' : '');
+
+        return (
+          <div key={fieldKey} className="mb-4">
+            <label className="block text-gray-700 font-medium mb-1">
+              {labelText}
+            </label>
+
+            {/* If it's an enum => <select> */}
+            {Array.isArray(fieldDef.enum) ? (
+              <select
+                className="block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={fieldValue}
+                onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+              >
+                <option value="">-- Select an option --</option>
+                {fieldDef.enum.map((option: string) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : fieldDef.type === 'number' ? (
+              <input
+                type="number"
+                className="block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={fieldValue}
+                onChange={(e) => {
+                  const numericVal = parseFloat(e.target.value);
+                  handleFieldChange(fieldKey, isNaN(numericVal) ? '' : numericVal);
+                }}
+              />
+            ) : (
+              // Default to text input
+              <input
+                type="text"
+                className="block w-full border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={fieldValue}
+                onChange={(e) => handleFieldChange(fieldKey, e.target.value)}
+              />
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

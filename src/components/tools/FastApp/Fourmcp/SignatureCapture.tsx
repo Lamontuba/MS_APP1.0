@@ -1,50 +1,36 @@
-// SignatureCapture.tsx
 import React, { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 
 interface SignatureCaptureProps {
   formData: {
-    businessName: string;
-    businessType: string;
-    ownerName: string;
-    ownerEmail: string;
-    // Add other fields as needed...
+    businessInfo: {
+      businessName: string;
+      businessType: string;
+    };
+    ownerInfo: {
+      ownerName: string;
+      ownerEmail: string;
+    };
   };
-  setFormData: React.Dispatch<React.SetStateAction<any>>;
+  setFormData: (data: any) => void;
 }
 
 const SignatureCapture: React.FC<SignatureCaptureProps> = ({ formData, setFormData }) => {
-  const sigPad = useRef<SignatureCanvas>(null);
+  const signatureRef = useRef<SignatureCanvas>(null);
 
-  const handleSaveSignature = () => {
-    if (sigPad.current) {
-      const signatureData = sigPad.current.getTrimmedCanvas().toDataURL('image/png');
-      // For example, store the signature image in formData under 'signature'
-      setFormData((prev: any) => ({
-        ...prev,
-        signature: signatureData
-      }));
-    }
-  };
-
-  const handleClearSignature = () => {
-    if (sigPad.current) {
-      sigPad.current.clear();
-    }
+  const handleSave = () => {
+    const signature = signatureRef.current?.toDataURL();
+    setFormData({ ...formData, signature });
   };
 
   return (
     <div>
-      <h2>Signature Capture</h2>
+      <h2>Signature</h2>
       <SignatureCanvas
-        ref={sigPad}
-        penColor="black"
-        canvasProps={{ className: 'sigCanvas', width: 500, height: 200 }}
+        ref={signatureRef}
+        canvasProps={{ className: 'signature-canvas' }}
       />
-      <div>
-        <button onClick={handleClearSignature}>Clear</button>
-        <button onClick={handleSaveSignature}>Save Signature</button>
-      </div>
+      <button onClick={handleSave}>Save Signature</button>
     </div>
   );
 };

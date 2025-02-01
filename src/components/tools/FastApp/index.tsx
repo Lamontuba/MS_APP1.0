@@ -1,8 +1,4 @@
 import React, { useState } from 'react';
-import BusinessInfoForm from './Fourmcp/BusinessInfoForm';
-import OwnerInfoForm from './Fourmcp/OwnerInfoForm'; 
-import BankingInfoForm from './Fourmcp/BankingInfoForm';
-import SignatureCapture from './Fourmcp/SignatureCapture';
 
 const FastApp: React.FC = () => {
   const [step, setStep] = useState(1);
@@ -27,20 +23,67 @@ const FastApp: React.FC = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return <BusinessInfoForm formData={formData} handleChange={handleChange} />;
-      case 2:
-        return <OwnerInfoForm formData={formData} handleChange={handleChange} />;  
-      case 3:
-        return <BankingInfoForm formData={formData} handleChange={handleChange} />;
-      case 4:
-        return <SignatureCapture formData={formData} setFormData={setFormData} />;
-      default:
-        return null;
-    }
-  };
+    const renderStep = (): React.ReactNode => {
+        switch (step) {
+            case 1:
+                return (
+                    <div>
+                        <h2>Step 1: Business Information</h2>
+                        <input
+                            type="text"
+                            name="businessName"
+                            value={formData.businessName}
+                            onChange={handleChange}
+                            placeholder="Business Name"
+                        />
+                        <input
+                            type="text"
+                            name="businessType"
+                            value={formData.businessType}
+                            onChange={handleChange}
+                            placeholder="Business Type"
+                        />
+                    </div>
+                );
+            case 2:
+                return (
+                    <div>
+                        <h2>Step 2: Owner Information</h2>
+                        <input
+                            type="text"
+                            name="ownerName"
+                            value={formData.ownerName}
+                            onChange={handleChange}
+                            placeholder="Owner Name"
+                        />
+                        <input
+                            type="email"
+                            name="ownerEmail"
+                            value={formData.ownerEmail}
+                            onChange={handleChange}
+                            placeholder="Owner Email"
+                        />
+                    </div>
+                );
+            case 3:
+                return (
+                    <div>
+                        <h2>Step 3: Additional Information</h2>
+                        {/* Add additional fields as needed */}
+                    </div>
+                );
+            case 4:
+                return (
+                    <div>
+                        <h2>Step 4: Review & Submit</h2>
+                        <pre>{JSON.stringify(formData, null, 2)}</pre>
+                        <button onClick={() => alert('Form submitted!')}>Submit</button>
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
 
   return (
     <div>

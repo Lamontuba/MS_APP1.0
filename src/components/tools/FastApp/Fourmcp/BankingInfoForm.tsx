@@ -2,15 +2,35 @@ import React from 'react';
 
 interface BankingInfoFormProps {
   formData: {
-    // Define the fields for banking info
+    bankName: string;
+    accountNumber: string;
+    // ...
   };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
 }
 
-const BankingInfoForm: React.FC<BankingInfoFormProps> = ({ formData, handleChange }) => {
+const BankingInfoForm: React.FC<BankingInfoFormProps> = ({ formData, onChange }) => {
   return (
     <div>
-      {/* Your banking info form logic */}
+      <h2>Banking Information</h2>
+      <label htmlFor="bankName">Bank Name</label>
+      <input
+        type="text"
+        id="bankName"
+        name="bankName"
+        value={formData.bankName}
+        onChange={onChange}
+      />
+
+      <label htmlFor="accountNumber">Account Number</label>
+      <input
+        type="text"
+        id="accountNumber"
+        name="accountNumber"
+        value={formData.accountNumber}
+        onChange={onChange}
+      />
+      {/* Additional fields as needed */}
     </div>
   );
 };
