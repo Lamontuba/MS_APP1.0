@@ -1,25 +1,33 @@
 // src/components/tools/FastApp/Fourmcp/BusinessInfoForm.tsx
 import React from 'react';
-import { FormData } from '../FastApp'; // Adjust the path if necessary
+import { FormData } from '../FastApp';
 
-// Update the interface to include the onChange property
 export interface BusinessInfoFormProps {
   formData: FormData;
   onChange: (field: string, value: string) => void;
   onNext: () => void;
+  inputClassName: string;
 }
 
-const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({ formData, onChange, onNext }) => {
+const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({
+  formData,
+  onChange,
+  onNext,
+  inputClassName,
+}) => {
   return (
     <div>
-      <h2>Business Information</h2>
-      <div>
-        <label htmlFor="businessType">Business Type</label>
+      <h2 className="text-xl font-bold text-white mb-4">Business Information</h2>
+      <div className="mb-4">
+        <label htmlFor="businessType" className="block text-white mb-2">
+          Business Type
+        </label>
         <select
           id="businessType"
           name="businessType"
           value={formData.businessType}
           onChange={(e) => onChange('businessType', e.target.value)}
+          className={inputClassName}
         >
           <option value="">Select business type</option>
           <option value="llc">LLC</option>
@@ -27,8 +35,10 @@ const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({ formData, onChange,
           <option value="sole-proprietorship">Sole Proprietorship</option>
         </select>
       </div>
-      <div>
-        <label htmlFor="businessName">Business Name</label>
+      <div className="mb-4">
+        <label htmlFor="businessName" className="block text-white mb-2">
+          Business Name
+        </label>
         <input
           id="businessName"
           name="businessName"
@@ -36,9 +46,9 @@ const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({ formData, onChange,
           value={formData.businessName}
           onChange={(e) => onChange('businessName', e.target.value)}
           placeholder="Enter your business name"
+          className={inputClassName}
         />
       </div>
-      <button onClick={onNext}>Next</button>
     </div>
   );
 };

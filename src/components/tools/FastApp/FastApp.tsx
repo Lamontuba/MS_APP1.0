@@ -4,11 +4,8 @@ import BusinessInfoForm from './Fourmcp/BusinessInfoForm';
 import OwnerInfoForm from './Fourmcp/OwnerInfoForm';
 import BankingInfoForm from './Fourmcp/BankingInfoForm';
 import SignatureCapture from './Fourmcp/SignatureCapture';
-import { Dispatch, SetStateAction } from 'react';
 
 export interface FormData {
-  
- 
   businessName: string;
   businessType: string;
   ownerName: string;
@@ -29,7 +26,7 @@ const FastApp: React.FC = () => {
   });
   const [step, setStep] = useState(1);
 
-  // This function is used by our form components.
+  // This function updates form fields.
   const onChange = (field: string, value: string) => {
     setFormData((prevData) => ({
       ...prevData,
@@ -37,7 +34,11 @@ const FastApp: React.FC = () => {
     }));
   };
 
-  // Render the appropriate step based on "step" value.
+  // Tailwind CSS classes for consistent input styling.
+  const inputFieldClasses =
+    "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+
+  // Render the appropriate form step based on "step".
   const renderStep = () => {
     switch (step) {
       case 1:
@@ -46,6 +47,7 @@ const FastApp: React.FC = () => {
             formData={formData}
             onChange={onChange}
             onNext={() => setStep(2)}
+            inputClassName={inputFieldClasses}
           />
         );
       case 2:
@@ -53,8 +55,7 @@ const FastApp: React.FC = () => {
           <OwnerInfoForm
             formData={formData}
             onChange={onChange}
-            onBack={() => setStep(1)}
-            onNext={() => setStep(3)}
+            inputClassName={inputFieldClasses}
           />
         );
       case 3:
@@ -63,24 +64,16 @@ const FastApp: React.FC = () => {
             formData={formData}
             onChange={onChange}
             onBack={() => setStep(2)}
-            onNext={() => setStep(4)} handleChange={function (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>): void {
-              throw new Error('Function not implemented.');
-            } }          />
+            onNext={() => setStep(4)}
+            inputClassName={inputFieldClasses}
+          />
         );
       case 4:
         return (
           <SignatureCapture
             formData={formData}
-            setFormData={setFormData as Dispatch<SetStateAction<{ [key: string]: string }>>}
-            onBack={() => setStep(3)}
-            onNext={() => {
-              // You can add form submission logic here.
-              console.log('Submitting form:', formData);
-            }}
-            handleChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-              const { name, value } = e.target;
-              onChange(name, value);
-            }}
+            setFormData={setFormData}
+            inputClassName={inputFieldClasses}
           />
         );
       default:
@@ -113,11 +106,9 @@ const FastApp: React.FC = () => {
           </div>
 
           {/* Form Content */}
-          <div className="p-6">
-            {renderStep()}
-          </div>
+          <div className="p-6">{renderStep()}</div>
 
-          {/* Navigation Buttons */}
+          {/* Navigation Buttons (Global) */}
           <div className="p-6 border-t border-zinc-800 flex justify-between">
             <button
               onClick={() => setStep(step - 1)}
@@ -131,7 +122,14 @@ const FastApp: React.FC = () => {
               Back
             </button>
             <button
-              onClick={() => setStep(step + 1)}
+              onClick={() => {
+                if (step === 4) {
+                  // Add your submission logic here.
+                  console.log('Submitting form:', formData);
+                } else {
+                  setStep(step + 1);
+                }
+              }}
               className="px-4 py-2 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
             >
               {step === 4 ? 'Submit' : 'Next'}

@@ -1,23 +1,25 @@
 // src/components/tools/FastApp/Fourmcp/OwnerInfoForm.tsx
 import React from 'react';
+import { FormData } from '../FastApp';
 
 export interface OwnerInfoFormProps {
-  formData: {
-    ownerName: string;
-    ownerEmail: string;
-    [key: string]: string;
-  };
+  formData: FormData;
   onChange: (field: string, value: string) => void;
-  onBack: () => void;
-  onNext: () => void;
+  inputClassName: string;
 }
 
-const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({ formData, onChange, onBack, onNext }) => {
+const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({
+  formData,
+  onChange,
+  inputClassName,
+}) => {
   return (
     <div>
-      <h2>Owner Information</h2>
-      <div>
-        <label htmlFor="ownerName">Owner Name</label>
+      <h2 className="text-xl font-bold text-white mb-4">Owner Information</h2>
+      <div className="mb-4">
+        <label htmlFor="ownerName" className="block text-white mb-2">
+          Owner Name
+        </label>
         <input
           id="ownerName"
           name="ownerName"
@@ -25,10 +27,13 @@ const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({ formData, onChange, onBac
           value={formData.ownerName}
           onChange={(e) => onChange('ownerName', e.target.value)}
           placeholder="Enter owner name"
+          className={inputClassName}
         />
       </div>
-      <div>
-        <label htmlFor="ownerEmail">Owner Email</label>
+      <div className="mb-4">
+        <label htmlFor="ownerEmail" className="block text-white mb-2">
+          Owner Email
+        </label>
         <input
           id="ownerEmail"
           name="ownerEmail"
@@ -36,12 +41,10 @@ const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({ formData, onChange, onBac
           value={formData.ownerEmail}
           onChange={(e) => onChange('ownerEmail', e.target.value)}
           placeholder="Enter owner email"
+          className={inputClassName}
         />
       </div>
-      <div>
-        <button onClick={onBack}>Back</button>
-        <button onClick={onNext}>Next</button>
-      </div>
+      {/* Navigation buttons have been removed from this component */}
     </div>
   );
 };
