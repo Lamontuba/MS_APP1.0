@@ -1,0 +1,11 @@
+/* src/components/tools/FastApp/FastApp.css */
+.fastapp-wrapper {
+    min-height: 100vh;
+    background-color: #000000; /* Light gray background */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  

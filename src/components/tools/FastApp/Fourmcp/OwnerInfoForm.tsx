@@ -1,36 +1,47 @@
+// src/components/tools/FastApp/Fourmcp/OwnerInfoForm.tsx
 import React from 'react';
 
-interface OwnerInfoFormProps {
+export interface OwnerInfoFormProps {
   formData: {
     ownerName: string;
     ownerEmail: string;
-    // Other fields...
+    [key: string]: string;
   };
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  onChange: (field: string, value: string) => void;
+  onBack: () => void;
+  onNext: () => void;
 }
 
-const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({ formData, handleChange }) => {
+const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({ formData, onChange, onBack, onNext }) => {
   return (
     <div>
-      <label>
-        Owner Name:
+      <h2>Owner Information</h2>
+      <div>
+        <label htmlFor="ownerName">Owner Name</label>
         <input
-          type="text"
+          id="ownerName"
           name="ownerName"
+          type="text"
           value={formData.ownerName}
-          onChange={handleChange}
+          onChange={(e) => onChange('ownerName', e.target.value)}
+          placeholder="Enter owner name"
         />
-      </label>
-      <label>
-        Owner Email:
+      </div>
+      <div>
+        <label htmlFor="ownerEmail">Owner Email</label>
         <input
-          type="email"
+          id="ownerEmail"
           name="ownerEmail"
+          type="email"
           value={formData.ownerEmail}
-          onChange={handleChange}
+          onChange={(e) => onChange('ownerEmail', e.target.value)}
+          placeholder="Enter owner email"
         />
-      </label>
-      {/* Other fields... */}
+      </div>
+      <div>
+        <button onClick={onBack}>Back</button>
+        <button onClick={onNext}>Next</button>
+      </div>
     </div>
   );
 };

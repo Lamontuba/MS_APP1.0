@@ -1,36 +1,43 @@
 import React, { useRef } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
+import { FormData } from '../FastApp';
+
 
 interface SignatureCaptureProps {
   formData: {
-    businessInfo: {
-      businessName: string;
-      businessType: string;
-    };
-    ownerInfo: {
-      ownerName: string;
-      ownerEmail: string;
-    };
+    businessName: string;
+    businessType: string;
+    [key: string]: string;
   };
-  setFormData: (data: any) => void;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
+  setFormData: React.Dispatch<React.SetStateAction<{ [key: string]: string }>>;
+  onBack: () => void;
+  onNext: () => void;
 }
+const SignatureCapture: React.FC<SignatureCaptureProps> = ({ formData, setFormData, onBack, onNext }) => {
+  const sigPad = useRef<SignatureCanvas>(null);
 
-const SignatureCapture: React.FC<SignatureCaptureProps> = ({ formData, setFormData }) => {
-  const signatureRef = useRef<SignatureCanvas>(null);
-
-  const handleSave = () => {
-    const signature = signatureRef.current?.toDataURL();
-    setFormData({ ...formData, signature });
+  const handleSaveSignature = () => {
+    if (sigPad.current) {
+      const signatureData = sigPad.current.getTrimmedCanvas().toDataURL('image/png');
+      setFormData(prev => ({ ...prev, signature: signatureData }));
+    }
   };
 
   return (
     <div>
-      <h2>Signature</h2>
+      <h2>Signature Capture</h2>
       <SignatureCanvas
-        ref={signatureRef}
-        canvasProps={{ className: 'signature-canvas' }}
+        ref={sigPad}
+        penColor="black"
+        canvasProps={{ width: 500, height: 200, className: 'sigCanvas' }}
       />
-      <button onClick={handleSave}>Save Signature</button>
+      <div>
+        <button onClick={onBack}>Back</button>
+        <button onClick={() => { handleSaveSignature(); onNext(); }}>
+          Next
+        </button>
+      </div>
     </div>
   );
 };
