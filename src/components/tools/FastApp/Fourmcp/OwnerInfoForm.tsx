@@ -13,6 +13,16 @@ const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({
   onChange,
   inputClassName,
 }) => {
+  const formFieldClassName = `
+    ${inputClassName}
+    bg-zinc-800 
+    text-zinc-100
+    border-zinc-700
+    focus:border-zinc-600
+    hover:border-zinc-600
+    placeholder:text-zinc-500
+  `;
+
   return (
     <div>
       <h2 className="text-xl font-bold text-white mb-4">Owner Information</h2>
@@ -27,7 +37,7 @@ const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({
           value={formData.ownerName}
           onChange={(e) => onChange('ownerName', e.target.value)}
           placeholder="Enter owner name"
-          className={inputClassName}
+          className={formFieldClassName}
         />
       </div>
       <div className="mb-4">
@@ -41,7 +51,7 @@ const OwnerInfoForm: React.FC<OwnerInfoFormProps> = ({
           value={formData.ownerEmail}
           onChange={(e) => onChange('ownerEmail', e.target.value)}
           placeholder="Enter owner email"
-          className={inputClassName}
+          className={formFieldClassName}
         />
       </div>
       {/* Navigation buttons have been removed from this component */}

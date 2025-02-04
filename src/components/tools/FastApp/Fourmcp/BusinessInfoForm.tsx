@@ -15,6 +15,22 @@ const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({
   onNext,
   inputClassName,
 }) => {
+  const formFieldClassName = `
+    ${inputClassName}
+    bg-zinc-800 
+    text-zinc-100
+    border-zinc-700
+    focus:border-zinc-600
+    hover:border-zinc-600
+    placeholder:text-zinc-500
+  `;
+
+  const selectClassName = `
+    ${formFieldClassName}
+    [&>option]:bg-zinc-800 
+    [&>option]:text-zinc-100
+  `;
+
   return (
     <div>
       <h2 className="text-xl font-bold text-white mb-4">Business Information</h2>
@@ -27,12 +43,14 @@ const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({
           name="businessType"
           value={formData.businessType}
           onChange={(e) => onChange('businessType', e.target.value)}
-          className={inputClassName}
+          className={selectClassName}
         >
-          <option value="">Select business type</option>
-          <option value="llc">LLC</option>
-          <option value="corporation">Corporation</option>
-          <option value="sole-proprietorship">Sole Proprietorship</option>
+          <option value="" className="bg-zinc-800 text-zinc-100">Select business type</option>
+          <option value="llc" className="bg-zinc-800 text-zinc-100">LLC</option>
+          <option value="corporation" className="bg-zinc-800 text-zinc-100">Corporation</option>
+          <option value="sole-proprietorship" className="bg-zinc-800 text-zinc-100">Sole Proprietorship</option>
+          <option value="partnership" className="bg-zinc-800 text-zinc-100">Partnership</option>
+          <option value="non-profit" className="bg-zinc-800 text-zinc-100">Non-Profit</option>
         </select>
       </div>
       <div className="mb-4">
@@ -46,7 +64,7 @@ const BusinessInfoForm: React.FC<BusinessInfoFormProps> = ({
           value={formData.businessName}
           onChange={(e) => onChange('businessName', e.target.value)}
           placeholder="Enter your business name"
-          className={inputClassName}
+          className={formFieldClassName}
         />
       </div>
     </div>

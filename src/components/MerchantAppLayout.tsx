@@ -7,11 +7,12 @@ import {
   Layers, ChevronRight, LogOut 
 } from 'lucide-react';
 import FastApp from "@/components/tools/FastApp/FastApp";
-import DashboardTool from "@/components/tools/DashboardTool";
+import DashboardTool from "@/components/tools/Dashboard/DashboardTool";
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import AIFloatingButton from '@/components/AIFloatingButton';
 import AIChatWindow from '@/components/AIChatWindow';
+
 
 type ToolSection = {
   id: string;
