@@ -1,5 +1,5 @@
 
-import { ApiClient, EnvelopesApi, RecipientViewRequest } from '@docusign/esign';
+import { ApiClient, EnvelopesApi, RecipientViewRequest } from 'docusign-esign';
 
 const BASE_PATH = 'https://demo.docusign.net/restapi';
 
