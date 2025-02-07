@@ -44,9 +44,13 @@ export async function POST() {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('DocuSign token error:', error);
+      console.error('DocuSign token error:', {
+        status: response.status,
+        error: error,
+        payload: payload
+      });
       return NextResponse.json(
-        { error: 'Failed to get DocuSign access token' },
+        { error: 'Failed to get DocuSign access token', details: error },
         { status: response.status }
       );
     }
