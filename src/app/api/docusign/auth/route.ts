@@ -3,17 +3,20 @@ import jwt from 'jsonwebtoken';
 
 export async function POST() {
   try {
-    const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    const rawPrivateKey = process.env.DOCUSIGN_PRIVATE_KEY;
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
-    if (!privateKey || !integrationKey || !userId) {
+    if (!rawPrivateKey || !integrationKey || !userId) {
       console.error('Missing DocuSign configuration');
       return NextResponse.json(
         { error: 'Missing DocuSign configuration' },
         { status: 500 }
       );
     }
+
+    // Convert literal "\n" sequences into actual newline characters
+    const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
 
     const payload = {
       iss: integrationKey,
