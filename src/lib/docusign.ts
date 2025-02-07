@@ -5,6 +5,11 @@ const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 export async function getDocuSignToken() {
   try {
     const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    console.log('DocuSign Token Generation:', {
+      hasPrivateKey: !!privateKey,
+      privateKeyLength: privateKey?.length
+    });
+    
     if (!privateKey) {
       throw new Error("Missing DOCUSIGN_PRIVATE_KEY");
     }

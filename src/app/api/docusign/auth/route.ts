@@ -7,6 +7,13 @@ export async function POST() {
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
+    console.log('DocuSign Config Check:', {
+      hasPrivateKey: !!rawPrivateKey,
+      hasIntegrationKey: !!integrationKey,
+      hasUserId: !!userId,
+      privateKeyLength: rawPrivateKey?.length
+    });
+
     if (!rawPrivateKey || !integrationKey || !userId) {
       console.error('Missing DocuSign configuration');
       return NextResponse.json(
