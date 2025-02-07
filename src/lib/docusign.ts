@@ -1,93 +1,99 @@
+import jwt from 'jsonwebtoken';
 
 const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 
-export async function createAndSendEnvelope(formData: any, signerEmail: string, signerName: string) {
-  const accessToken = await getAccessToken();
-  const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
-
-  if (!accountId) {
-    throw new Error('DocuSign Account ID is required');
-  }
-
-  const documentHtml = generateDocumentHtml(formData);
-  const documentBase64 = Buffer.from(documentHtml).toString('base64');
-
-  const envelope = {
-    emailSubject: 'Please sign this merchant application',
-    documents: [{
-      documentBase64,
-      name: 'Merchant Application',
-      fileExtension: 'html',
-      documentId: '1'
-    }],
-    recipients: {
-      signers: [{
-        email: signerEmail,
-        name: signerName,
-        recipientId: '1',
-        routingOrder: '1',
-        tabs: {
-          signHereTabs: [{
-            documentId: '1',
-            pageNumber: '1',
-            xPosition: '100',
-            yPosition: '700'
-          }]
-        }
-      }]
-    },
-    status: 'sent'
-  };
-
+export async function getDocuSignToken() {
   try {
-    const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(envelope)
-    });
+    const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    if (!privateKey) {
+      throw new Error("Missing DOCUSIGN_PRIVATE_KEY");
+    }
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('DocuSign envelope error:', error);
+    // Convert literal "\n" sequences into actual newlines
+    const formattedKey = privateKey.replace(/\\n/g, '\n');
+
+    const payload = {
+      iss: process.env.DOCUSIGN_INTEGRATION_KEY,
+      sub: process.env.DOCUSIGN_USER_ID,
+      aud: process.env.DOCUSIGN_AUTH_SERVER,
+      scope: 'signature',
+      exp: Math.floor(Date.now() / 1000) + 3600
+    };
+
+    const token = jwt.sign(payload, formattedKey, { algorithm: 'RS256' });
+    return token;
+  } catch (error) {
+    console.error("DocuSign token error:", error);
+    throw new Error("Failed to get DocuSign access token");
+  }
+}
+
+export async function createAndSendEnvelope(formData, signerEmail, signerName) {
+  try {
+    const accessToken = await getDocuSignToken();
+    const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
+
+    if (!accountId) {
+      throw new Error('DocuSign Account ID is required');
+    }
+
+    const documentHtml = generateDocumentHtml(formData);
+    const documentBase64 = Buffer.from(documentHtml).toString('base64');
+
+    const envelope = {
+      emailSubject: 'Please sign this merchant application',
+      documents: [{
+        documentBase64,
+        name: 'Merchant Application',
+        fileExtension: 'html',
+        documentId: '1'
+      }],
+      recipients: {
+        signers: [{
+          email: signerEmail,
+          name: signerName,
+          recipientId: '1',
+          routingOrder: '1',
+          tabs: {
+            signHereTabs: [{
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '100',
+              yPosition: '700'
+            }]
+          }
+        }]
+      },
+      status: 'sent'
+    };
+
+    try {
+      const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(envelope)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('DocuSign envelope error:', error);
+        throw new Error('Failed to create envelope');
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('DocuSign create envelope error:', error);
       throw new Error('Failed to create envelope');
     }
-
-    return response.json();
   } catch (error) {
-    console.error('DocuSign create envelope error:', error);
-    throw new Error('Failed to create envelope');
+    console.error("DocuSign auth error:", error);
+    throw error;
   }
 }
 
-async function getAccessToken(): Promise<string> {
-  try {
-    const response = await fetch('/api/docusign/auth', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('DocuSign token error:', error);
-      throw new Error('Failed to get DocuSign access token');
-    }
-
-    const data = await response.json();
-    if (!data.access_token) {
-      throw new Error('No access token returned');
-    }
-
-    return data.access_token;
-  } catch (error) {
-    console.error('DocuSign auth error:', error);
-    throw new Error('Failed to get DocuSign access token');
-  }
-}
 
 function generateDocumentHtml(formData: any): string {
   return `
@@ -95,7 +101,7 @@ function generateDocumentHtml(formData: any): string {
     <html>
       <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
         <h1 style="text-align: center; color: #333;">Merchant Application</h1>
-        
+
         <div style="margin-top: 30px;">
           <h2 style="color: #444;">Business Information</h2>
           <p><strong>Business Name:</strong> ${formData.businessName}</p>
