@@ -4,7 +4,15 @@ import jwt from 'jsonwebtoken';
 
 export async function POST() {
   try {
-    const privateKey = process.env.DOCUSIGN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const privateKey = process.env.DOCUSIGN_PRIVATE_KEY?.replace(/\\n/g, '\n').trim();
+    
+    if (!privateKey || !privateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+      console.error('Invalid private key format');
+      return NextResponse.json(
+        { error: 'Invalid private key format' },
+        { status: 500 }
+      );
+    }
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
     

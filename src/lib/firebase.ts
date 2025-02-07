@@ -18,7 +18,8 @@ if (!firebaseConfig.appId) {
 }
 
 if (!firebaseConfig.appId) {
-  console.warn('Firebase App ID is not configured');
+  console.error('Firebase App ID is missing. Please add NEXT_PUBLIC_FIREBASE_APP_ID to your environment variables.');
+  throw new Error('Firebase App ID is required');
 }
 
 // Initialize Firebase only on client side
