@@ -1,6 +1,4 @@
 
-import jwt from 'jsonwebtoken';
-
 const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 
 export async function createAndSendEnvelope(formData: any, signerEmail: string, signerName: string) {
@@ -51,27 +49,35 @@ export async function createAndSendEnvelope(formData: any, signerEmail: string, 
   });
 
   if (!response.ok) {
+    const error = await response.json();
+    console.error('DocuSign envelope error:', error);
     throw new Error('Failed to create envelope');
   }
 
-  const result = await response.json();
-  return result;
+  return response.json();
 }
 
 async function getAccessToken(): Promise<string> {
-  const response = await fetch('/api/docusign/auth', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
+  try {
+    const response = await fetch('/api/docusign/auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('DocuSign token error:', error);
+      throw new Error('Failed to get DocuSign access token');
     }
-  });
-  
-  if (!response.ok) {
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    console.error('DocuSign auth error:', error);
     throw new Error('Failed to get DocuSign access token');
   }
-
-  const data = await response.json();
-  return data.access_token;
 }
 
 function generateDocumentHtml(formData: any): string {

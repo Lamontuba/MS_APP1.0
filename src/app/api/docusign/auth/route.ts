@@ -9,6 +9,11 @@ export async function POST() {
     const userId = process.env.DOCUSIGN_USER_ID;
     
     if (!privateKey || !integrationKey || !userId) {
+      console.error('Missing DocuSign configuration:', { 
+        hasPrivateKey: !!privateKey,
+        hasIntegrationKey: !!integrationKey,
+        hasUserId: !!userId 
+      });
       return NextResponse.json({ error: 'Missing DocuSign configuration' }, { status: 500 });
     }
 
@@ -35,6 +40,12 @@ export async function POST() {
     });
 
     const data = await response.json();
+    
+    if (!response.ok) {
+      console.error('DocuSign token error:', data);
+      return NextResponse.json({ error: 'Failed to get access token' }, { status: response.status });
+    }
+
     return NextResponse.json(data);
   } catch (error) {
     console.error('DocuSign Auth Error:', error);
