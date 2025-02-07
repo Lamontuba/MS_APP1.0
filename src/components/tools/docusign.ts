@@ -1,5 +1,6 @@
 
-import { ApiClient, EnvelopesApi } from '@docusign/esign';
+import docusign from '@docusign/esign';
+const { ApiClient, EnvelopesApi } = docusign;
 
 export async function initializeDocuSignClient() {
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
