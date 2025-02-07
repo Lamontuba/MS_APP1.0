@@ -14,7 +14,7 @@ export async function POST() {
         hasIntegrationKey: !!integrationKey,
         hasUserId: !!userId 
       });
-      return NextResponse.json({ error: 'Missing DocuSign configuration' }, { status: 500 });
+      throw new Error('Missing DocuSign configuration');
     }
 
     const payload = {
@@ -39,16 +39,19 @@ export async function POST() {
       })
     });
 
-    const data = await response.json();
-    
     if (!response.ok) {
-      console.error('DocuSign token error:', data);
-      return NextResponse.json({ error: 'Failed to get access token' }, { status: response.status });
+      const error = await response.json();
+      console.error('DocuSign token error:', error);
+      throw new Error('Failed to get access token');
     }
 
+    const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
     console.error('DocuSign Auth Error:', error);
-    return NextResponse.json({ error: 'Failed to authenticate with DocuSign' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to authenticate with DocuSign' }, 
+      { status: 500 }
+    );
   }
 }
