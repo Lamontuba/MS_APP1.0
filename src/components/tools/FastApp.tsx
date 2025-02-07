@@ -30,7 +30,7 @@ const FastApp = () => {
     signatureDate: new Date().toISOString().split('T')[0]
   });
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
