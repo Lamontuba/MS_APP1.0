@@ -2,21 +2,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // DocuSign tokens
-    match /docusign_tokens/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Helper function to check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Applications collection
+    match /applications/{applicationId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
     
     // Leads collection
     match /leads/{leadId} {
-      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow read: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuth() && resource.data.userId == request.auth.uid;
     }
     
-    // Applications collection
-    match /applications/{applicationId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    // User data
+    match /users/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+    
+    // DocuSign tokens
+    match /docusign_tokens/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
     }
   }
 }
