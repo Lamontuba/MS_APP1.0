@@ -38,7 +38,30 @@ export async function getDocuSignToken() {
   }
 }
 
-export async function createAndSendEnvelope(formData, signerEmail, signerName) {
+interface FormData {
+  businessName: string;
+  dbaName?: string;
+  businessAddress: string;
+  businessPhone: string;
+  businessEmail: string;
+  taxId?: string;
+  ownerName: string;
+  ownerTitle: string;
+  ownerPhone: string;
+  ownerEmail: string;
+  ownerSSN?: string;
+  dateOfBirth?: string;
+  monthlyVolume?: string;
+  averageTicket?: string;
+  maxTicket?: string;
+  bankName?: string;
+  routingNumber?: string;
+  accountNumber?: string;
+  signature?: string;
+  signatureDate?: string;
+}
+
+export async function createAndSendEnvelope(formData: FormData, signerEmail: string, signerName: string) {
   try {
     const accessToken = await getDocuSignToken();
     const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
