@@ -1,7 +1,6 @@
-
 "use client";
 import React, { useState } from "react";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase"; // Assuming auth import is available
 import { collection, addDoc } from "firebase/firestore";
 
 const FastApp = () => {
@@ -14,7 +13,7 @@ const FastApp = () => {
     businessPhone: "",
     businessEmail: "",
     taxId: "",
-    
+
     // Owner Information
     ownerName: "",
     ownerTitle: "",
@@ -22,17 +21,17 @@ const FastApp = () => {
     ownerEmail: "",
     ownerSSN: "",
     dateOfBirth: "",
-    
+
     // Processing Information
     monthlyVolume: "",
     averageTicket: "",
     maxTicket: "",
-    
+
     // Bank Information
     bankName: "",
     routingNumber: "",
     accountNumber: "",
-    
+
     // Signature
     signature: "",
     signatureDate: new Date().toISOString().split('T')[0]
@@ -46,15 +45,20 @@ const FastApp = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("User must be authenticated");
+      }
       // Save to Firestore
-      await addDoc(collection(db, "merchants"), {
+      await addDoc(collection(db, "applications"), {
         ...formData,
+        userId: user.uid,
         createdAt: new Date(),
         status: "pending"
       });
-      
+
       // TODO: Trigger DocuSign integration here
-      
+
       alert("Application submitted successfully!");
       setStep(1);
       setFormData({
