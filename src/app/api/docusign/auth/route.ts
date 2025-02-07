@@ -3,9 +3,16 @@ import jwt from 'jsonwebtoken';
 
 export async function POST() {
   try {
-    const rawPrivateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    let rawPrivateKey = process.env.DOCUSIGN_PRIVATE_KEY;
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
+
+    // Ensure private key has proper line breaks
+    if (rawPrivateKey) {
+      rawPrivateKey = rawPrivateKey
+        .replace(/\\n/g, '\n')
+        .replace(/-----(BEGIN|END) RSA PRIVATE KEY-----\s*/g, (match) => match.trim() + '\n');
+    }
 
     console.log('DocuSign Config Check:', {
       hasPrivateKey: !!rawPrivateKey,
