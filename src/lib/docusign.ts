@@ -6,25 +6,21 @@ export async function getDocuSignToken() {
   try {
     let privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
 
-    // Format private key if it exists
-    if (privateKey) {
-      privateKey = privateKey
-        .replace(/\\n/g, '\n')
-        .replace(/-----(BEGIN|END) RSA PRIVATE KEY-----\s*/g, (match) => match.trim() + '\n');
+    if (!privateKey) {
+      throw new Error('DOCUSIGN_PRIVATE_KEY environment variable is not set');
     }
+
+    // Format private key
+    privateKey = privateKey
+      .replace(/\\n/g, '\n')
+      .replace(/["']/g, '')
+      .replace(/-----(BEGIN|END) RSA PRIVATE KEY-----\s*/g, (match) => match.trim() + '\n');
 
     console.log('DocuSign Token Generation:', {
       hasPrivateKey: !!privateKey,
       privateKeyLength: privateKey?.length,
       keyFormat: privateKey?.substring(0, 50) + '...' // Log first 50 chars for debugging
     });
-
-    if (!privateKey) {
-      throw new Error("Missing DOCUSIGN_PRIVATE_KEY");
-    }
-
-    // Convert literal "\n" sequences into actual newlines
-    const formattedKey = privateKey.replace(/\\n/g, '\n');
 
     const payload = {
       iss: process.env.DOCUSIGN_INTEGRATION_KEY,
@@ -34,7 +30,7 @@ export async function getDocuSignToken() {
       exp: Math.floor(Date.now() / 1000) + 3600
     };
 
-    const token = jwt.sign(payload, formattedKey, { algorithm: 'RS256' });
+    const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
     return token;
   } catch (error) {
     console.error("DocuSign token error:", error);

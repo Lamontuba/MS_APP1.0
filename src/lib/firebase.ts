@@ -13,34 +13,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-if (!firebaseConfig.appId) {
-  console.error('Firebase App ID is missing. Please check your environment variables.');
-}
-
-if (!firebaseConfig.appId) {
-  console.error('Firebase App ID is missing. Please add NEXT_PUBLIC_FIREBASE_APP_ID to your environment variables.');
-  throw new Error('Firebase App ID is required');
-}
-
 // Initialize Firebase only on client side
-let app = null;
-let auth = null;
-let db = null;
-
-if (typeof window !== 'undefined') {
-  console.log('Firebase Config Check:', {
-    hasApiKey: !!firebaseConfig.apiKey,
-    hasAuthDomain: !!firebaseConfig.authDomain,
-    hasProjectId: !!firebaseConfig.projectId,
-    hasStorageBucket: !!firebaseConfig.storageBucket,
-    hasMessagingSenderId: !!firebaseConfig.messagingSenderId,
-    hasAppId: !!firebaseConfig.appId
-  });
-
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
-}
-
+const app = typeof window !== 'undefined' ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
 const googleProvider = new GoogleAuthProvider();
+
 export { auth, db, googleProvider };
