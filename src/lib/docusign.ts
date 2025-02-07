@@ -39,22 +39,27 @@ export async function createAndSendEnvelope(formData: any, signerEmail: string, 
     status: 'sent'
   };
 
-  const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(envelope)
-  });
+  try {
+    const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(envelope)
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    console.error('DocuSign envelope error:', error);
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('DocuSign envelope error:', error);
+      throw new Error('Failed to create envelope');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('DocuSign create envelope error:', error);
     throw new Error('Failed to create envelope');
   }
-
-  return response.json();
 }
 
 async function getAccessToken(): Promise<string> {
@@ -73,6 +78,10 @@ async function getAccessToken(): Promise<string> {
     }
 
     const data = await response.json();
+    if (!data.access_token) {
+      throw new Error('No access token returned');
+    }
+
     return data.access_token;
   } catch (error) {
     console.error('DocuSign auth error:', error);
@@ -95,6 +104,14 @@ function generateDocumentHtml(formData: any): string {
           <p><strong>Business Phone:</strong> ${formData.businessPhone}</p>
           <p><strong>Business Email:</strong> ${formData.businessEmail}</p>
           <p><strong>Tax ID:</strong> ${formData.taxId || 'N/A'}</p>
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h2 style="color: #444;">Owner Information</h2>
+          <p><strong>Name:</strong> ${formData.ownerName}</p>
+          <p><strong>Title:</strong> ${formData.ownerTitle}</p>
+          <p><strong>Phone:</strong> ${formData.ownerPhone}</p>
+          <p><strong>Email:</strong> ${formData.ownerEmail}</p>
         </div>
 
         <div style="margin-top: 50px;">
