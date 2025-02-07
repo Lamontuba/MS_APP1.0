@@ -1,4 +1,4 @@
-
+// src/lib/docusign.ts
 import jwt from 'jsonwebtoken';
 
 const BASE_PATH = 'https://demo.docusign.net/restapi';
@@ -92,3 +92,19 @@ function generateDocumentHtml(formData: any): string {
     </html>
   `;
 }
+
+
+// src/components/tools/docusign.ts
+import { createAndSendEnvelope } from '@/lib/docusign';
+
+export const initializeDocuSignClient = async (formData: any, recipientEmail: string, recipientName: string) => {
+  try {
+    const envelope = await createAndSendEnvelope(formData, recipientEmail, recipientName);
+    return envelope;
+  } catch (error) {
+    console.error('DocuSign initialization error:', error);
+    throw error;
+  }
+};
+
+export { createAndSendEnvelope };
