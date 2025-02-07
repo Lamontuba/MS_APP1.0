@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
-import { createAndSendEnvelope } from '@/lib/docusign';
+import { createAndSendEnvelope } from '../../lib/docusign';
 
 const FastApp = () => {
   const [step, setStep] = useState(1);
