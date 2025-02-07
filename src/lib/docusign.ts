@@ -1,11 +1,11 @@
 
 import jwt from 'jsonwebtoken';
 
-const DOCUSIGN_BASE_PATH = process.env.NEXT_PUBLIC_DOCUSIGN_BASE_PATH || 'https://demo.docusign.net/restapi';
+const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 
 export async function createAndSendEnvelope(formData: any, signerEmail: string, signerName: string) {
   const accessToken = await getAccessToken();
-  const accountId = process.env.NEXT_PUBLIC_DOCUSIGN_ACCOUNT_ID;
+  const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
 
   if (!accountId) {
     throw new Error('DocuSign Account ID is required');
@@ -33,7 +33,7 @@ export async function createAndSendEnvelope(formData: any, signerEmail: string, 
             documentId: '1',
             pageNumber: '1',
             xPosition: '100',
-            yPosition: '100'
+            yPosition: '700'
           }]
         }
       }]
@@ -41,31 +41,29 @@ export async function createAndSendEnvelope(formData: any, signerEmail: string, 
     status: 'sent'
   };
 
-  try {
-    const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(envelope)
-    });
+  const response = await fetch(`${DOCUSIGN_BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(envelope)
+  });
 
-    if (!response.ok) {
-      throw new Error('Failed to create envelope');
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error('DocuSign API Error:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error('Failed to create envelope');
   }
+
+  const result = await response.json();
+  return result;
 }
 
 async function getAccessToken(): Promise<string> {
   const response = await fetch('/api/docusign/auth', {
-    method: 'POST'
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
   });
   
   if (!response.ok) {
@@ -80,21 +78,23 @@ function generateDocumentHtml(formData: any): string {
   return `
     <!DOCTYPE html>
     <html>
-      <body>
-        <h1>Merchant Application</h1>
-        <div>
-          <h2>Business Information</h2>
-          <p>Business Name: ${formData.businessName}</p>
-          <p>DBA Name: ${formData.dbaName}</p>
-          <p>Business Address: ${formData.businessAddress}</p>
-          <p>Business Phone: ${formData.businessPhone}</p>
-          <p>Business Email: ${formData.businessEmail}</p>
-          <p>Tax ID: ${formData.taxId}</p>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; color: #333;">Merchant Application</h1>
+        
+        <div style="margin-top: 30px;">
+          <h2 style="color: #444;">Business Information</h2>
+          <p><strong>Business Name:</strong> ${formData.businessName}</p>
+          <p><strong>DBA Name:</strong> ${formData.dbaName || 'N/A'}</p>
+          <p><strong>Business Address:</strong> ${formData.businessAddress}</p>
+          <p><strong>Business Phone:</strong> ${formData.businessPhone}</p>
+          <p><strong>Business Email:</strong> ${formData.businessEmail}</p>
+          <p><strong>Tax ID:</strong> ${formData.taxId || 'N/A'}</p>
         </div>
-        <!-- Add signature field -->
+
         <div style="margin-top: 50px;">
-          <p>Signature: ____________________</p>
-          <p>Date: ${new Date().toLocaleDateString()}</p>
+          <hr style="border: 1px solid #ccc;">
+          <p style="margin-top: 30px;"><strong>Signature:</strong> ____________________</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
         </div>
       </body>
     </html>
