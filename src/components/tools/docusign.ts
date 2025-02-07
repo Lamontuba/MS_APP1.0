@@ -1,40 +1,25 @@
 
+import jwt from 'jsonwebtoken';
+
 const BASE_PATH = 'https://demo.docusign.net/restapi';
 
-export async function initializeDocuSignClient() {
-  const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
-  const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
-  const userId = process.env.DOCUSIGN_USER_ID;
-
-  try {
-    const response = await fetch('https://account-d.docusign.com/oauth/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        assertion: generateJWT(integrationKey, userId, privateKey),
-      }),
-    });
-
-    const data = await response.json();
-    return data.access_token;
-  } catch (error) {
-    console.error('Error getting JWT token:', error);
-    throw error;
-  }
-}
-
-export async function createEnvelope(accessToken: string, formData: any, recipientEmail: string, recipientName: string) {
+export async function createAndSendEnvelope(formData: any, recipientEmail: string, recipientName: string) {
+  const accessToken = await getAccessToken();
   const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
 
-  const envelopeDefinition = {
+  if (!accessToken || !accountId) {
+    throw new Error('Missing DocuSign configuration');
+  }
+
+  const documentHtml = generateDocumentHtml(formData);
+  const documentBase64 = Buffer.from(documentHtml).toString('base64');
+
+  const envelope = {
     emailSubject: 'Please sign this merchant application',
     documents: [{
-      documentBase64: Buffer.from(JSON.stringify(formData)).toString('base64'),
+      documentBase64,
       name: 'Merchant Application',
-      fileExtension: 'json',
+      fileExtension: 'html',
       documentId: '1'
     }],
     recipients: {
@@ -48,7 +33,7 @@ export async function createEnvelope(accessToken: string, formData: any, recipie
             documentId: '1',
             pageNumber: '1',
             xPosition: '100',
-            yPosition: '100'
+            yPosition: '700'
           }]
         }
       }]
@@ -56,25 +41,54 @@ export async function createEnvelope(accessToken: string, formData: any, recipie
     status: 'sent'
   };
 
-  try {
-    const response = await fetch(`${BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ envelopeDefinition }),
-    });
+  const response = await fetch(`${BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(envelope)
+  });
 
-    return response.json();
-  } catch (error) {
-    console.error('Error creating envelope:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error('Failed to create envelope');
   }
+
+  return response.json();
 }
 
-function generateJWT(integrationKey: string, userId: string, privateKey: string): string {
-  // Implement JWT generation here
-  // You'll need to add a JWT library like 'jsonwebtoken'
-  return '';
+async function getAccessToken(): Promise<string> {
+  const response = await fetch('/api/docusign/auth', {
+    method: 'POST'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to get DocuSign access token');
+  }
+
+  const data = await response.json();
+  return data.access_token;
+}
+
+function generateDocumentHtml(formData: any): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px;">
+        <h1 style="text-align: center; color: #333;">Merchant Application</h1>
+        <div style="margin-top: 30px;">
+          <h2 style="color: #444;">Business Information</h2>
+          <p><strong>Business Name:</strong> ${formData.businessName}</p>
+          <p><strong>Business Address:</strong> ${formData.businessAddress}</p>
+          <p><strong>Business Phone:</strong> ${formData.businessPhone}</p>
+          <p><strong>Business Email:</strong> ${formData.businessEmail}</p>
+        </div>
+        <div style="margin-top: 50px;">
+          <hr style="border: 1px solid #ccc;">
+          <p style="margin-top: 30px;"><strong>Signature:</strong> ____________________</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+        </div>
+      </body>
+    </html>
+  `;
 }
