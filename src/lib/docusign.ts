@@ -1,5 +1,5 @@
 
-import { ApiClient, EnvelopesApi } from 'docusign-esign';
+import { ApiClient, EnvelopesApi } from '@docusign/esign';
 
 export async function createAndSendEnvelope(formData: any, signerEmail: string, signerName: string) {
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
@@ -22,7 +22,6 @@ export async function createAndSendEnvelope(formData: any, signerEmail: string, 
 
   const envelopesApi = new EnvelopesApi(apiClient);
   
-  // Create envelope definition
   const envelopeDefinition = {
     emailSubject: 'Please sign this merchant application',
     documents: [{
