@@ -1,8 +1,4 @@
 
-import { ApiClient } from 'docusign-esign/src/ApiClient';
-import { EnvelopesApi } from 'docusign-esign/src/api/EnvelopesApi';
-import { RecipientViewRequest } from 'docusign-esign/src/model/RecipientViewRequest';
-
 const BASE_PATH = 'https://demo.docusign.net/restapi';
 
 export async function initializeDocuSignClient() {
@@ -10,38 +6,28 @@ export async function initializeDocuSignClient() {
   const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
   const userId = process.env.DOCUSIGN_USER_ID;
 
-  const apiClient = new ApiClient({
-    basePath: BASE_PATH,
-    authentication: {
-      oAuth: {
-        privateKey,
-        integrationKey,
-        userId,
-        oAuthBasePath: 'account-d.docusign.com'
-      }
-    }
-  });
-
   try {
-    const token = await apiClient.requestJWTUserToken(
-      integrationKey,
-      userId,
-      'signature',
-      privateKey,
-      3600
-    );
-    
-    apiClient.addDefaultHeader('Authorization', `Bearer ${token.body.access_token}`);
-    return apiClient;
+    const response = await fetch('https://account-d.docusign.com/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        assertion: generateJWT(integrationKey, userId, privateKey),
+      }),
+    });
+
+    const data = await response.json();
+    return data.access_token;
   } catch (error) {
     console.error('Error getting JWT token:', error);
     throw error;
   }
 }
 
-export async function createEnvelope(apiClient: any, formData: any, recipientEmail: string, recipientName: string) {
+export async function createEnvelope(accessToken: string, formData: any, recipientEmail: string, recipientName: string) {
   const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
-  const envelopesApi = new EnvelopesApi(apiClient);
 
   const envelopeDefinition = {
     emailSubject: 'Please sign this merchant application',
@@ -71,9 +57,24 @@ export async function createEnvelope(apiClient: any, formData: any, recipientEma
   };
 
   try {
-    return await envelopesApi.createEnvelope(accountId, { envelopeDefinition });
+    const response = await fetch(`${BASE_PATH}/v2.1/accounts/${accountId}/envelopes`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ envelopeDefinition }),
+    });
+
+    return response.json();
   } catch (error) {
     console.error('Error creating envelope:', error);
     throw error;
   }
+}
+
+function generateJWT(integrationKey: string, userId: string, privateKey: string): string {
+  // Implement JWT generation here
+  // You'll need to add a JWT library like 'jsonwebtoken'
+  return '';
 }
