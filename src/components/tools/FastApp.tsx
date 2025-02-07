@@ -4,37 +4,27 @@ import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
 import { createAndSendEnvelope } from '@/lib/docusign';
 
-
 const FastApp = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Business Information
     businessName: "",
     dbaName: "",
     businessAddress: "",
     businessPhone: "",
     businessEmail: "",
     taxId: "",
-
-    // Owner Information
     ownerName: "",
     ownerTitle: "",
     ownerPhone: "",
     ownerEmail: "",
     ownerSSN: "",
     dateOfBirth: "",
-
-    // Processing Information
     monthlyVolume: "",
     averageTicket: "",
     maxTicket: "",
-
-    // Bank Information
     bankName: "",
     routingNumber: "",
     accountNumber: "",
-
-    // Signature
     signature: "",
     signatureDate: new Date().toISOString().split('T')[0]
   });
@@ -67,20 +57,16 @@ const FastApp = () => {
         formData.ownerName
       );
 
-      // Update application with DocuSign envelope ID
-      await updateDoc(docRef, {
-        docusignEnvelopeId: envelope.envelopeId
-      });
+      if (envelope) {
+        await updateDoc(docRef, {
+          envelopeId: envelope.envelopeId,
+          status: "sent_for_signature"
+        });
+      }
 
-      alert("Application submitted and sent for signature!");
-      setStep(1);
-      setFormData({
-        businessName: "", dbaName: "", businessAddress: "", businessPhone: "",
-        businessEmail: "", taxId: "", ownerName: "", ownerTitle: "", ownerPhone: "",
-        ownerEmail: "", ownerSSN: "", dateOfBirth: "", monthlyVolume: "",
-        averageTicket: "", maxTicket: "", bankName: "", routingNumber: "",
-        accountNumber: "", signature: "", signatureDate: new Date().toISOString().split('T')[0]
-      });
+      // Reset form or show success message
+      alert("Application submitted successfully!");
+      setFormData({...formData}); // Reset form
     } catch (error) {
       console.error("Error submitting application:", error);
       alert("Error submitting application. Please try again.");
