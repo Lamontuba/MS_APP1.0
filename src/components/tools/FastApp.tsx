@@ -2,23 +2,7 @@
 import React, { useState } from "react";
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
-import { initializeDocuSignClient, createEnvelope } from './docusign'; // You'll need to create this file
-
-
-// Placeholder for DocuSign integration - Replace with your actual implementation
-const createAndSendEnvelope = async (formData, recipientEmail, recipientName) => {
-  try {
-    const docusignClient = await initializeDocuSignClient(); // Initialize the DocuSign client
-
-    const envelope = await createEnvelope(docusignClient, formData, recipientEmail, recipientName); // Create the envelope
-
-    return envelope;
-
-  } catch (error) {
-    console.error("Error creating DocuSign envelope:", error);
-    throw error; // Re-throw the error for handling in handleSubmit
-  }
-};
+import { createAndSendEnvelope } from '@/lib/docusign';
 
 
 const FastApp = () => {

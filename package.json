@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.8",
     "axios": "^1.7.9",
     "docusign-esign": "^8.0.1",
     "firebase": "^11.2.0",
