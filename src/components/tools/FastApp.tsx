@@ -1,7 +1,25 @@
 "use client";
 import React, { useState } from "react";
-import { db, auth } from "@/lib/firebase"; // Assuming auth import is available
-import { collection, addDoc } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, updateDoc } from "firebase/firestore";
+import { initializeDocuSignClient, createEnvelope } from './docusign'; // You'll need to create this file
+
+
+// Placeholder for DocuSign integration - Replace with your actual implementation
+const createAndSendEnvelope = async (formData, recipientEmail, recipientName) => {
+  try {
+    const docusignClient = await initializeDocuSignClient(); // Initialize the DocuSign client
+
+    const envelope = await createEnvelope(docusignClient, formData, recipientEmail, recipientName); // Create the envelope
+
+    return envelope;
+
+  } catch (error) {
+    console.error("Error creating DocuSign envelope:", error);
+    throw error; // Re-throw the error for handling in handleSubmit
+  }
+};
+
 
 const FastApp = () => {
   const [step, setStep] = useState(1);
@@ -49,17 +67,28 @@ const FastApp = () => {
       if (!user) {
         throw new Error("User must be authenticated");
       }
+
       // Save to Firestore
-      await addDoc(collection(db, "applications"), {
+      const docRef = await addDoc(collection(db, "applications"), {
         ...formData,
         userId: user.uid,
         createdAt: new Date(),
         status: "pending"
       });
 
-      // TODO: Trigger DocuSign integration here
+      // Create and send DocuSign envelope
+      const envelope = await createAndSendEnvelope(
+        formData,
+        formData.ownerEmail,
+        formData.ownerName
+      );
 
-      alert("Application submitted successfully!");
+      // Update application with DocuSign envelope ID
+      await updateDoc(docRef, {
+        docusignEnvelopeId: envelope.envelopeId
+      });
+
+      alert("Application submitted and sent for signature!");
       setStep(1);
       setFormData({
         businessName: "", dbaName: "", businessAddress: "", businessPhone: "",
