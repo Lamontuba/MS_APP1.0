@@ -1,5 +1,4 @@
-
-import docusign from '@docusign/esign';
+import docusign from 'docusign-esign';
 const { ApiClient, EnvelopesApi } = docusign;
 
 export async function initializeDocuSignClient() {
@@ -25,7 +24,7 @@ export async function initializeDocuSignClient() {
 export async function createEnvelope(apiClient: ApiClient, formData: any, recipientEmail: string, recipientName: string) {
   const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
   const envelopesApi = new EnvelopesApi(apiClient);
-  
+
   const envelopeDefinition = {
     emailSubject: 'Please sign this merchant application',
     documents: [{
