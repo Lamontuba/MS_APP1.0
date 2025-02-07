@@ -1,12 +1,12 @@
-import docusign from 'docusign-esign';
-const { ApiClient, EnvelopesApi } = docusign;
+
+import * as docusign from 'docusign-esign';
 
 export async function initializeDocuSignClient() {
   const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
   const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
   const userId = process.env.DOCUSIGN_API_USER_ID;
 
-  const apiClient = new ApiClient();
+  const apiClient = new docusign.ApiClient();
   apiClient.setOAuthBasePath('account-d.docusign.com');
 
   const jwtToken = await apiClient.requestJWTUserToken(
@@ -21,9 +21,9 @@ export async function initializeDocuSignClient() {
   return apiClient;
 }
 
-export async function createEnvelope(apiClient: ApiClient, formData: any, recipientEmail: string, recipientName: string) {
+export async function createEnvelope(apiClient: docusign.ApiClient, formData: any, recipientEmail: string, recipientName: string) {
   const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
-  const envelopesApi = new EnvelopesApi(apiClient);
+  const envelopesApi = new docusign.EnvelopesApi(apiClient);
 
   const envelopeDefinition = {
     emailSubject: 'Please sign this merchant application',
