@@ -1,6 +1,7 @@
 
 "use client";
 import React, { useState } from 'react';
+import SignatureCanvas from '../SignatureCanvas';
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
 import { createAndSendEnvelope } from '@/lib/docusign';
@@ -218,8 +219,12 @@ const FastApp = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <h2 className="text-xl font-semibold mb-4">Sign & Submit</h2>
             <div>
-              <label className="block text-sm font-medium text-zinc-300">Signature</label>
-              <input type="text" name="signature" value={formData.signature} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required placeholder="Type your full name to sign" />
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Draw Signature</label>
+              <SignatureCanvas
+                onChange={(signature) => setFormData({ ...formData, signature })}
+                width={400}
+                height={150}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-zinc-300">Date</label>
