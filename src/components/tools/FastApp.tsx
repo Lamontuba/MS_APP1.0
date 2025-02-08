@@ -9,12 +9,32 @@ import { createAndSendEnvelope } from '@/lib/docusign';
 const FastApp = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<Record<string, string>>({
-    // Business Information
     businessName: "",
     dbaName: "",
     businessAddress: "",
     businessType: "",
     taxId: "",
+    businessPhone: "",
+    businessEmail: "",
+    ownerName: "",
+    ownerTitle: "",
+    ownerPhone: "",
+    ownerEmail: "",
+    ownerSSN: "",
+    ownershipPercentage: "",
+    monthlyVolume: "",
+    averageTicket: "",
+    maxTicket: "",
+    businessCategory: "",
+    processingMethods: "",
+    bankName: "",
+    routingNumber: "",
+    accountNumber: "",
+    accountType: "",
+    signature: "",
+    signatureDate: new Date().toISOString().split('T')[0],
+    ipAddress: "",
+    location: ""
     
     // Owner Information
     ownerName: "",
@@ -91,28 +111,10 @@ const FastApp = () => {
       alert("Application submitted successfully!");
       
       // Reset form
-      setFormData({
-        businessName: "",
-        dbaName: "",
-        businessAddress: "",
-        businessPhone: "",
-        businessEmail: "",
-        taxId: "",
-        ownerName: "",
-        ownerTitle: "",
-        ownerPhone: "",
-        ownerEmail: "",
-        ownerSSN: "",
-        dateOfBirth: "",
-        monthlyVolume: "",
-        averageTicket: "",
-        maxTicket: "",
-        bankName: "",
-        routingNumber: "",
-        accountNumber: "",
-        signature: "",
+      setFormData(prev => ({
+        ...Object.keys(prev).reduce((acc, key) => ({...acc, [key]: ""}), {}),
         signatureDate: new Date().toISOString().split('T')[0]
-      });
+      }));
       setStep(1);
     } catch (error) {
       console.error("Error submitting application:", error);
