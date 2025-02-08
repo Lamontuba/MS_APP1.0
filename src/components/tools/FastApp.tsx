@@ -8,27 +8,55 @@ import { createAndSendEnvelope } from '@/lib/docusign';
 const FastApp = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
+    // Business Information
     businessName: "",
     dbaName: "",
     businessAddress: "",
-    businessPhone: "",
-    businessEmail: "",
+    businessType: "",
     taxId: "",
+    
+    // Owner Information
     ownerName: "",
     ownerTitle: "",
     ownerPhone: "",
     ownerEmail: "",
     ownerSSN: "",
-    dateOfBirth: "",
+    ownershipPercentage: "",
+    
+    // Processing Information
     monthlyVolume: "",
     averageTicket: "",
     maxTicket: "",
+    businessCategory: "",
+    processingMethods: [],
+    
+    // Bank Information
     bankName: "",
     routingNumber: "",
     accountNumber: "",
+    accountType: "",
+    
+    // Signature Information
     signature: "",
-    signatureDate: new Date().toISOString().split('T')[0]
+    signatureDate: new Date().toISOString().split('T')[0],
+    ipAddress: "",
+    location: "",
+    additionalSigners: []
   });
+
+  // Get IP and location on component mount
+  useEffect(() => {
+    const getIpAddress = async () => {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        setFormData(prev => ({...prev, ipAddress: data.ip}));
+      } catch (error) {
+        console.error('Error fetching IP:', error);
+      }
+    };
+    getIpAddress();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

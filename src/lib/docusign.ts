@@ -140,9 +140,24 @@ function generateDocumentHtml(formData: any): string {
           <p><strong>Business Name:</strong> ${formData.businessName}</p>
           <p><strong>DBA Name:</strong> ${formData.dbaName || 'N/A'}</p>
           <p><strong>Business Address:</strong> ${formData.businessAddress}</p>
-          <p><strong>Business Phone:</strong> ${formData.businessPhone}</p>
-          <p><strong>Business Email:</strong> ${formData.businessEmail}</p>
-          <p><strong>Tax ID:</strong> ${formData.taxId || 'N/A'}</p>
+          <p><strong>Business Type:</strong> ${formData.businessType}</p>
+          <p><strong>Tax ID/EIN:</strong> ${formData.taxId || 'N/A'}</p>
+          <p><strong>Business Category:</strong> ${formData.businessCategory}</p>
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h2 style="color: #444;">Processing Information</h2>
+          <p><strong>Monthly Volume:</strong> ${formData.monthlyVolume}</p>
+          <p><strong>Average Ticket:</strong> ${formData.averageTicket}</p>
+          <p><strong>Processing Methods:</strong> ${formData.processingMethods.join(', ')}</p>
+        </div>
+
+        <div style="margin-top: 30px;">
+          <h2 style="color: #444;">Bank Information</h2>
+          <p><strong>Bank Name:</strong> ${formData.bankName}</p>
+          <p><strong>Account Type:</strong> ${formData.accountType}</p>
+          <p><strong>Routing Number:</strong> ${formData.routingNumber}</p>
+          <p><strong>Account Number:</strong> ${formData.accountNumber}</p>
         </div>
 
         <div style="margin-top: 30px;">
