@@ -46,29 +46,41 @@ const FastApp = () => {
         throw new Error("User must be authenticated");
       }
 
-      // Save to Firestore
+      // Save to Firestore including signatures
       const docRef = await addDoc(collection(db, "applications"), {
         ...formData,
         userId: user.uid,
         createdAt: new Date(),
-        status: "pending"
+        status: "pending",
+        signature: formData.signature,
+        signatureDate: formData.signatureDate
       });
 
-      // Create and send DocuSign envelope
-      const envelope = await createAndSendEnvelope(
-        formData,
-        formData.ownerEmail,
-        formData.ownerName
-      );
-
-      if (envelope) {
-        await updateDoc(docRef, {
-          envelopeId: envelope.envelopeId,
-          status: "sent_for_signature"
-        });
-      }
       alert("Application submitted successfully!");
-      setFormData({...formData}); // Reset form
+      
+      // Reset form
+      setFormData({
+        businessName: "",
+        dbaName: "",
+        businessAddress: "",
+        businessPhone: "",
+        businessEmail: "",
+        taxId: "",
+        ownerName: "",
+        ownerTitle: "",
+        ownerPhone: "",
+        ownerEmail: "",
+        ownerSSN: "",
+        dateOfBirth: "",
+        monthlyVolume: "",
+        averageTicket: "",
+        maxTicket: "",
+        bankName: "",
+        routingNumber: "",
+        accountNumber: "",
+        signature: "",
+        signatureDate: new Date().toISOString().split('T')[0]
+      });
       setStep(1);
     } catch (error) {
       console.error("Error submitting application:", error);
