@@ -8,7 +8,7 @@ import { createAndSendEnvelope } from '@/lib/docusign';
 
 const FastApp = () => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Record<string, string>>({
     // Business Information
     businessName: "",
     dbaName: "",
@@ -59,9 +59,12 @@ const FastApp = () => {
     getIpAddress();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({
+      ...prev,
+      [name]: value || ''
+    }));
   };
 
   const nextStep = () => setStep(step + 1);
