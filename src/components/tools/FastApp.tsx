@@ -99,6 +99,7 @@ const FastApp = () => {
       }
 
       // Save to Firestore including signatures
+      // Save to Firebase
       const docRef = await addDoc(collection(db, "applications"), {
         ...formData,
         userId: user.uid,
@@ -108,7 +109,49 @@ const FastApp = () => {
         signatureDate: formData.signatureDate
       });
 
-      alert("Application submitted successfully!");
+      // Create DocuSign envelope from template
+      try {
+        const envelopeData = {
+          templateId: process.env.NEXT_PUBLIC_DOCUSIGN_TEMPLATE_ID,
+          templateData: {
+            businessName: formData.businessName,
+            dbaName: formData.dbaName,
+            businessAddress: formData.businessAddress,
+            businessPhone: formData.businessPhone,
+            businessEmail: formData.businessEmail,
+            taxId: formData.taxId,
+            ownerName: formData.ownerName,
+            ownerTitle: formData.ownerTitle,
+            ownerPhone: formData.ownerPhone,
+            ownerEmail: formData.ownerEmail,
+            monthlyVolume: formData.monthlyVolume,
+            averageTicket: formData.averageTicket,
+            maxTicket: formData.maxTicket,
+            bankName: formData.bankName,
+            routingNumber: formData.routingNumber,
+            accountNumber: formData.accountNumber,
+            signature: formData.signature,
+            signatureDate: formData.signatureDate
+          }
+        };
+
+        const response = await fetch('/api/docusign/create-envelope', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(envelopeData)
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create DocuSign envelope');
+        }
+
+        alert("Application submitted and document created successfully!");
+      } catch (error) {
+        console.error('DocuSign error:', error);
+        alert("Application saved but document creation failed. Please contact support.");
+      }
       
       // Reset form
       setFormData(prev => ({
