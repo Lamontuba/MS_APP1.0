@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SignatureCanvas from '../SignatureCanvas';
 import { db, auth } from "@/lib/firebase";
 import { collection, addDoc, updateDoc } from "firebase/firestore";
