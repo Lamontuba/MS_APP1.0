@@ -34,7 +34,7 @@ const FastApp = () => {
     signature: "",
     signatureDate: new Date().toISOString().split('T')[0],
     ipAddress: "",
-    location: ""
+    location: "",
     
     // Owner Information
     ownerName: "",
