@@ -63,7 +63,7 @@ export default function FastApp() {
           {steps.map((step) => (
             <div key={step.id} className="flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                currentStep >= step.id ? 'bg-blue-600' : 'bg-gray-300'
+                currentStep >= step.id ? 'bg-green-600' : 'bg-gray-300'
               }`}>
                 {currentStep > step.id ? (
                   <Check className="w-5 h-5 text-white" />
