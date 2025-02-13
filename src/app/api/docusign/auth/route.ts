@@ -22,9 +22,22 @@ export async function POST() {
     });
 
     if (!rawPrivateKey || !integrationKey || !userId) {
-      console.error('Missing DocuSign configuration');
+      console.error('Missing DocuSign configuration:', {
+        hasPrivateKey: !!rawPrivateKey,
+        hasIntegrationKey: !!integrationKey,
+        hasUserId: !!userId
+      });
       return NextResponse.json(
-        { error: 'Missing DocuSign configuration' },
+        { error: 'Missing DocuSign configuration. Please check environment variables.' },
+        { status: 500 }
+      );
+    }
+
+    // Validate private key format
+    if (!rawPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+      console.error('Invalid private key format');
+      return NextResponse.json(
+        { error: 'Invalid private key format' },
         { status: 500 }
       );
     }

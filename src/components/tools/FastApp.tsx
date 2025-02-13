@@ -143,8 +143,11 @@ const FastApp = () => {
           body: JSON.stringify(envelopeData)
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-          throw new Error('Failed to create DocuSign envelope');
+          console.error('DocuSign error details:', data);
+          throw new Error(data.error || 'Failed to create DocuSign envelope');
         }
 
         alert("Application submitted and document created successfully!");
