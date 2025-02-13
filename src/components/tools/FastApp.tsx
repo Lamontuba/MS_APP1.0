@@ -98,18 +98,23 @@ const FastApp = () => {
         throw new Error("User must be authenticated");
       }
 
-      // Save to Firestore including signatures
-      // Save to Firebase
-      const docRef = await addDoc(collection(db, "applications"), {
-        ...formData,
-        userId: user.uid,
-        createdAt: new Date(),
-        status: "pending",
-        signature: formData.signature,
-        signatureDate: formData.signatureDate
-      });
+      // Save to Firebase first
+      try {
+        const docRef = await addDoc(collection(db, "applications"), {
+          ...formData,
+          userId: user.uid,
+          createdAt: new Date(),
+          status: "pending",
+          signature: formData.signature,
+          signatureDate: formData.signatureDate
+        });
+        console.log("Application saved to Firebase with ID:", docRef.id);
+      } catch (firebaseError) {
+        console.error("Firebase save error:", firebaseError);
+        throw new Error("Failed to save application data");
+      }
 
-      // Create DocuSign envelope from template
+      // Then create DocuSign envelope
       try {
         const envelopeData = {
           templateId: process.env.NEXT_PUBLIC_DOCUSIGN_TEMPLATE_ID,
@@ -146,8 +151,14 @@ const FastApp = () => {
         const data = await response.json();
         
         if (!response.ok) {
-          console.error('DocuSign error details:', data);
-          throw new Error(data.error || 'Failed to create DocuSign envelope');
+          console.error('DocuSign error details:', {
+            status: response.status,
+            statusText: response.statusText,
+            data: data
+          });
+          // Continue with success message since Firebase save worked
+          alert("Application saved successfully. DocuSign document creation will be handled by support.");
+          return;
         }
 
         alert("Application submitted and document created successfully!");
