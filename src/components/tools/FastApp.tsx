@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 import SignatureCanvas from '../SignatureCanvas';
@@ -35,7 +34,7 @@ const FastApp = () => {
     signatureDate: new Date().toISOString().split('T')[0],
     ipAddress: "",
     location: "",
-    
+
     // Owner Information
     ownerName: "",
     ownerTitle: "",
@@ -43,20 +42,20 @@ const FastApp = () => {
     ownerEmail: "",
     ownerSSN: "",
     ownershipPercentage: "",
-    
+
     // Processing Information
     monthlyVolume: "",
     averageTicket: "",
     maxTicket: "",
     businessCategory: "",
     processingMethods: [],
-    
+
     // Bank Information
     bankName: "",
     routingNumber: "",
     accountNumber: "",
     accountType: "",
-    
+
     // Signature Information
     signature: "",
     signatureDate: new Date().toISOString().split('T')[0],
@@ -140,6 +139,8 @@ const FastApp = () => {
           }
         };
 
+        console.log('Sending envelope data:', envelopeData);
+
         const response = await fetch('/api/docusign/create-envelope', {
           method: 'POST',
           headers: {
@@ -149,24 +150,23 @@ const FastApp = () => {
         });
 
         const data = await response.json();
-        
+
+        console.log('DocuSign response:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data
+        });
+
         if (!response.ok) {
-          console.error('DocuSign error details:', {
-            status: response.status,
-            statusText: response.statusText,
-            data: data
-          });
-          // Continue with success message since Firebase save worked
-          alert("Application saved successfully. DocuSign document creation will be handled by support.");
-          return;
+          throw new Error(`DocuSign API error: ${data.error || 'Unknown error'}`);
         }
 
         alert("Application submitted and document created successfully!");
       } catch (error) {
         console.error('DocuSign error:', error);
-        alert("Application saved but document creation failed. Please contact support.");
+        alert("Application saved but document creation failed. Please contact support.  Error details: " + error.message);
       }
-      
+
       // Reset form
       setFormData(prev => ({
         ...Object.keys(prev).reduce((acc, key) => ({...acc, [key]: ""}), {}),
@@ -175,7 +175,7 @@ const FastApp = () => {
       setStep(1);
     } catch (error) {
       console.error("Error submitting application:", error);
-      alert("Error submitting application. Please try again.");
+      alert("Error submitting application. Please try again. Error details: " + error.message);
     }
   };
 
@@ -202,7 +202,7 @@ const FastApp = () => {
             </div>
           </div>
         );
-      
+
       case 2:
         return (
           <div className="space-y-4">
