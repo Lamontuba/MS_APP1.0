@@ -203,26 +203,26 @@ export default function FastApp() {
         {currentStep === 4 && (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Review & Sign</h3>
-            <div className="p-4 bg-gray-50 rounded">
-              <h4 className="font-medium">Business Information</h4>
-              <p>Business Name: {formData.businessName}</p>
-              <p>Business Address: {formData.businessAddress}</p>
-              <p>Business Phone: {formData.businessPhone}</p>
-              <p>Business Email: {formData.businessEmail}</p>
+            <div className="p-4 bg-zinc-800 rounded border border-zinc-700">
+              <h4 className="font-medium text-white mb-2">Business Information</h4>
+              <p className="text-gray-300">Business Name: {formData.businessName}</p>
+              <p className="text-gray-300">Business Address: {formData.businessAddress}</p>
+              <p className="text-gray-300">Business Phone: {formData.businessPhone}</p>
+              <p className="text-gray-300">Business Email: {formData.businessEmail}</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded">
-              <h4 className="font-medium">Owner Information</h4>
-              <p>Owner Name: {formData.ownerName}</p>
-              <p>Owner Title: {formData.ownerTitle}</p>
-              <p>Owner Phone: {formData.ownerPhone}</p>
-              <p>Owner Email: {formData.ownerEmail}</p>
+            <div className="p-4 bg-zinc-800 rounded border border-zinc-700">
+              <h4 className="font-medium text-white mb-2">Owner Information</h4>
+              <p className="text-gray-300">Owner Name: {formData.ownerName}</p>
+              <p className="text-gray-300">Owner Title: {formData.ownerTitle}</p>
+              <p className="text-gray-300">Owner Phone: {formData.ownerPhone}</p>
+              <p className="text-gray-300">Owner Email: {formData.ownerEmail}</p>
             </div>
-            <div className="p-4 bg-gray-50 rounded">
-              <h4 className="font-medium">Bank Information</h4>
-              <p>Bank Name: {formData.bankName}</p>
-              <p>Account Type: {formData.accountType}</p>
-              <p>Routing Number: {formData.routingNumber}</p>
-              <p>Account Number: {formData.accountNumber}</p>
+            <div className="p-4 bg-zinc-800 rounded border border-zinc-700">
+              <h4 className="font-medium text-white mb-2">Bank Information</h4>
+              <p className="text-gray-300">Bank Name: {formData.bankName}</p>
+              <p className="text-gray-300">Account Type: {formData.accountType}</p>
+              <p className="text-gray-300">Routing Number: {formData.routingNumber}</p>
+              <p className="text-gray-300">Account Number: {formData.accountNumber}</p>
             </div>
           </div>
         )}
