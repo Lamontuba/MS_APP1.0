@@ -9,6 +9,8 @@ export default function FastApp() {
     businessPhone: '',
     businessEmail: '',
     ownerName: '',
+    additionalSigners: [{ name: '', email: '', title: '' }],
+    selectedAgreement: '',
     ownerTitle: '',
     ownerPhone: '',
     ownerEmail: '',
@@ -35,6 +37,25 @@ export default function FastApp() {
 
   const handleBack = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
+  const handleSignerChange = (index: number, field: string, value: string) => {
+    const newSigners = [...formData.additionalSigners];
+    newSigners[index] = { ...newSigners[index], [field]: value };
+    setFormData({ ...formData, additionalSigners: newSigners });
+  };
+
+  const getAgreementText = (type: string) => {
+    switch (type) {
+      case 'standard':
+        return "Standard Merchant Agreement: This agreement outlines the basic terms and conditions for merchant services...";
+      case 'premium':
+        return "Premium Merchant Agreement: This enhanced agreement includes additional services and premium support...";
+      case 'enterprise':
+        return "Enterprise Agreement: Comprehensive agreement for large-scale merchant operations...";
+      default:
+        return "";
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -136,6 +157,26 @@ export default function FastApp() {
         {currentStep === 2 && (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Owner Information</h3>
+            <select
+              name="selectedAgreement"
+              value={formData.selectedAgreement}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
+            >
+              <option value="">Select Agreement Type</option>
+              <option value="standard">Standard Merchant Agreement</option>
+              <option value="premium">Premium Merchant Agreement</option>
+              <option value="enterprise">Enterprise Agreement</option>
+            </select>
+            
+            {formData.selectedAgreement && (
+              <div className="p-4 border rounded bg-zinc-900">
+                <h4 className="font-medium mb-2">Agreement Preview</h4>
+                <div className="max-h-40 overflow-y-auto text-sm">
+                  {getAgreementText(formData.selectedAgreement)}
+                </div>
+              </div>
+            )}
             <input
               type="text"
               name="ownerName"
@@ -168,6 +209,45 @@ export default function FastApp() {
               onChange={handleInputChange}
               className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
+            
+            <div className="mt-6">
+              <h4 className="font-medium mb-2">Additional Signers</h4>
+              {formData.additionalSigners.map((signer, index) => (
+                <div key={index} className="space-y-2 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Signer Name"
+                    value={signer.name}
+                    onChange={(e) => handleSignerChange(index, 'name', e.target.value)}
+                    className="w-full p-2 border rounded bg-zinc-800 text-white"
+                  />
+                  <input
+                    type="email"
+                    placeholder="Signer Email"
+                    value={signer.email}
+                    onChange={(e) => handleSignerChange(index, 'email', e.target.value)}
+                    className="w-full p-2 border rounded bg-zinc-800 text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Signer Title"
+                    value={signer.title}
+                    onChange={(e) => handleSignerChange(index, 'title', e.target.value)}
+                    className="w-full p-2 border rounded bg-zinc-800 text-white"
+                  />
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setFormData({
+                  ...formData,
+                  additionalSigners: [...formData.additionalSigners, { name: '', email: '', title: '' }]
+                })}
+                className="mt-2 px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600"
+              >
+                Add Another Signer
+              </button>
+            </div>
           </div>
         )}
 
