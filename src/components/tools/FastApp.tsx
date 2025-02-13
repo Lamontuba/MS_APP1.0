@@ -111,9 +111,43 @@ const FastApp = () => {
 
       // Create DocuSign envelope from template
       try {
-        const envelopeData = {
-          templateId: process.env.NEXT_PUBLIC_DOCUSIGN_TEMPLATE_ID,
-          templateData: {
+        // Create elastic template first
+        const elasticTemplateData = {
+          name: `Merchant Application - ${formData.businessName}`,
+          documents: [{
+            documentBase64: Buffer.from(generateDocumentHtml(formData)).toString('base64'),
+            documentName: 'Merchant Application.html',
+            fileExtension: 'html',
+            order: 1,
+            display: 'document'
+          }],
+          displaySettings: {
+            displayType: 'modal',
+            consentButtonType: 'button_checkbox',
+            hasDeclineButton: false,
+            downloadEnabled: true,
+            emailEnabled: true
+          }
+        };
+
+        const elasticResponse = await fetch('/api/docusign/create-elastic', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(elasticTemplateData)
+        });
+
+        if (!elasticResponse.ok) {
+          throw new Error('Failed to create elastic template');
+        }
+
+        const { clickwrapId } = await elasticResponse.json();
+
+        // Create agreement using the elastic template
+        const agreementData = {
+          clickwrapId,
+          documentData: {
             businessName: formData.businessName,
             dbaName: formData.dbaName,
             businessAddress: formData.businessAddress,
