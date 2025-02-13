@@ -46,12 +46,17 @@ export default function FastApp() {
         body: JSON.stringify(formData)
       });
 
-      if (!response.ok) throw new Error('Failed to create template');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create template');
+      }
 
       // Handle success
       setCurrentStep(4);
     } catch (error) {
       console.error('Error creating elastic template:', error);
+      alert(error.message || 'Failed to create template. Please try again.');
     }
   };
 
