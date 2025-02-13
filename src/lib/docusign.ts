@@ -4,7 +4,7 @@ const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 
 export async function getDocuSignToken() {
   try {
-    const privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    let privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
@@ -13,10 +13,29 @@ export async function getDocuSignToken() {
     }
 
     // Format private key properly
-    const formattedKey = privateKey
+    privateKey = privateKey
       .replace(/\\n/g, '\n')
       .replace(/["']/g, '')
       .trim();
+
+    // Ensure proper RSA key format
+    if (!privateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+      privateKey = `-----BEGIN RSA PRIVATE KEY-----\n${privateKey}\n-----END RSA PRIVATE KEY-----`;
+    }
+
+    // Add line breaks every 64 characters in the key body
+    const keyParts = privateKey.split('\n');
+    const header = keyParts[0];
+    const footer = keyParts[keyParts.length - 1];
+    const keyBody = keyParts.slice(1, -1).join('');
+    const formattedBody = keyBody.match(/.{1,64}/g)?.join('\n') || '';
+    privateKey = `${header}\n${formattedBody}\n${footer}`;
+
+    console.log('DocuSign Config:', {
+      hasPrivateKey: !!privateKey,
+      privateKeyLength: privateKey?.length,
+      keyFormat: privateKey?.substring(0, 50) + '...' // Log first 50 chars for debugging
+    });
 
     const payload = {
       iss: integrationKey,
@@ -27,7 +46,7 @@ export async function getDocuSignToken() {
       scope: 'signature impersonation click.manage'
     };
 
-    const token = jwt.sign(payload, formattedKey, { algorithm: 'RS256' });
+    const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
 
     const response = await fetch('https://account-d.docusign.com/oauth/token', {
       method: 'POST',
