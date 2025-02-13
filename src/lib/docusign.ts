@@ -25,8 +25,8 @@ export async function getDocuSignToken() {
     const payload = {
       iss: process.env.DOCUSIGN_INTEGRATION_KEY,
       sub: process.env.DOCUSIGN_USER_ID,
-      aud: process.env.DOCUSIGN_AUTH_SERVER,
-      scope: 'signature',
+      aud: 'account-d.docusign.com',
+      scope: 'signature impersonation click.manage',
       exp: Math.floor(Date.now() / 1000) + 3600
     };
 
