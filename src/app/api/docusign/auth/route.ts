@@ -7,8 +7,14 @@ export async function POST() {
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
-    // Debug logging
-    console.log('DocuSign Config:', {
+    // Ensure private key has proper line breaks
+    if (rawPrivateKey) {
+      rawPrivateKey = rawPrivateKey
+        .replace(/\\n/g, '\n')
+        .replace(/-----(BEGIN|END) RSA PRIVATE KEY-----\s*/g, (match) => match.trim() + '\n');
+    }
+
+    console.log('DocuSign Config Check:', {
       hasPrivateKey: !!rawPrivateKey,
       hasIntegrationKey: !!integrationKey,
       hasUserId: !!userId,
@@ -16,44 +22,15 @@ export async function POST() {
     });
 
     if (!rawPrivateKey || !integrationKey || !userId) {
-      console.error('Missing credentials:', {
-        hasPrivateKey: !!rawPrivateKey,
-        hasIntegrationKey: !!integrationKey,
-        hasUserId: !!userId
-      });
+      console.error('Missing DocuSign configuration');
       return NextResponse.json(
-        { error: 'Missing DocuSign credentials. Please check your environment variables.' },
-        { status: 401 }
+        { error: 'Missing DocuSign configuration' },
+        { status: 500 }
       );
     }
 
-    // Validate private key format
-    if (!rawPrivateKey.includes('BEGIN RSA PRIVATE KEY')) {
-      console.error('Invalid private key format');
-      return NextResponse.json(
-        { error: 'Invalid private key format. Please check your DOCUSIGN_PRIVATE_KEY secret.' },
-        { status: 401 }
-      );
-    }
-
-    // Format private key
-    rawPrivateKey = rawPrivateKey
-      .replace(/\\n/g, '\n')
-      .replace(/["']/g, '')
-      .trim();
-
-    // Ensure proper RSA key format
-    if (!rawPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
-      rawPrivateKey = `-----BEGIN RSA PRIVATE KEY-----\n${rawPrivateKey}\n-----END RSA PRIVATE KEY-----`;
-    }
-
-    // Add line breaks every 64 characters in the key body
-    const keyParts = rawPrivateKey.split('\n');
-    const header = keyParts[0];
-    const footer = keyParts[keyParts.length - 1];
-    const keyBody = keyParts.slice(1, -1).join('');
-    const formattedBody = keyBody.match(/.{1,64}/g)?.join('\n') || '';
-    rawPrivateKey = `${header}\n${formattedBody}\n${footer}`;
+    // Convert literal "\n" sequences into actual newline characters
+    const privateKey = rawPrivateKey.replace(/\\n/g, '\n');
 
     const payload = {
       iss: integrationKey,
@@ -61,10 +38,12 @@ export async function POST() {
       aud: 'account-d.docusign.com',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
-      scope: 'signature impersonation organization_read click.manage'
+      scope: 'signature impersonation'
     };
 
-    const token = jwt.sign(payload, rawPrivateKey, { algorithm: 'RS256' });
+    const token = jwt.sign(payload, privateKey, { 
+      algorithm: 'RS256'
+    });
 
     const response = await fetch('https://account-d.docusign.com/oauth/token', {
       method: 'POST',
@@ -79,7 +58,11 @@ export async function POST() {
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('DocuSign token error:', error);
+      console.error('DocuSign token error:', {
+        status: response.status,
+        error: error,
+        payload: payload
+      });
       return NextResponse.json(
         { error: 'Failed to get DocuSign access token', details: error },
         { status: response.status }
@@ -91,7 +74,7 @@ export async function POST() {
   } catch (error: any) {
     console.error('DocuSign Auth Error:', error);
     return NextResponse.json(
-      { error: 'Authentication failed', details: error.message },
+      { error: 'Failed to authenticate with DocuSign', details: error.message },
       { status: 500 }
     );
   }

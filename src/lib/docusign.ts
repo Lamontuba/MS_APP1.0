@@ -5,71 +5,36 @@ const DOCUSIGN_BASE_PATH = 'https://demo.docusign.net/restapi';
 export async function getDocuSignToken() {
   try {
     let privateKey = process.env.DOCUSIGN_PRIVATE_KEY;
-    const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
-    const userId = process.env.DOCUSIGN_USER_ID;
 
-    if (!privateKey || !integrationKey || !userId) {
-      throw new Error('Missing DocuSign credentials');
+    if (!privateKey) {
+      throw new Error('DOCUSIGN_PRIVATE_KEY environment variable is not set');
     }
 
-    // Format private key properly
+    // Format private key
     privateKey = privateKey
       .replace(/\\n/g, '\n')
       .replace(/["']/g, '')
-      .trim();
+      .replace(/-----(BEGIN|END) RSA PRIVATE KEY-----\s*/g, (match) => match.trim() + '\n');
 
-    // Ensure proper RSA key format
-    if (!privateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
-      privateKey = `-----BEGIN RSA PRIVATE KEY-----\n${privateKey}\n-----END RSA PRIVATE KEY-----`;
-    }
-
-    // Add line breaks every 64 characters in the key body
-    const keyParts = privateKey.split('\n');
-    const header = keyParts[0];
-    const footer = keyParts[keyParts.length - 1];
-    const keyBody = keyParts.slice(1, -1).join('');
-    const formattedBody = keyBody.match(/.{1,64}/g)?.join('\n') || '';
-    privateKey = `${header}\n${formattedBody}\n${footer}`;
-
-    console.log('DocuSign Config:', {
+    console.log('DocuSign Token Generation:', {
       hasPrivateKey: !!privateKey,
       privateKeyLength: privateKey?.length,
       keyFormat: privateKey?.substring(0, 50) + '...' // Log first 50 chars for debugging
     });
 
     const payload = {
-      iss: integrationKey,
-      sub: userId,
-      aud: 'account-d.docusign.com',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600,
-      scope: 'signature impersonation organization_read click.manage'
+      iss: process.env.DOCUSIGN_INTEGRATION_KEY,
+      sub: process.env.DOCUSIGN_USER_ID,
+      aud: process.env.DOCUSIGN_AUTH_SERVER,
+      scope: 'signature',
+      exp: Math.floor(Date.now() / 1000) + 3600
     };
 
     const token = jwt.sign(payload, privateKey, { algorithm: 'RS256' });
-
-    const response = await fetch('https://account-d.docusign.com/oauth/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      body: new URLSearchParams({
-        'grant_type': 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-        'assertion': token
-      })
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('DocuSign token error:', error);
-      throw new Error(`DocuSign authentication failed: ${error.error_description || error.error}`);
-    }
-
-    const data = await response.json();
-    return data.access_token;
+    return token;
   } catch (error) {
-    console.error('DocuSign auth error:', error);
-    throw new Error('Failed to get DocuSign access token');
+    console.error("DocuSign token error:", error);
+    throw new Error("Failed to get DocuSign access token");
   }
 }
 
