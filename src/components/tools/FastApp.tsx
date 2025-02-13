@@ -78,7 +78,7 @@ export default function FastApp() {
         <div className="relative mt-2">
           <div className="absolute top-1/2 h-1 w-full bg-gray-200 -z-10" />
           <div
-            className="absolute top-1/2 h-1 bg-blue-600 transition-all -z-10"
+            className="absolute top-1/2 h-1 bg-green-600 transition-all -z-10"
             style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
           />
         </div>
@@ -232,7 +232,7 @@ export default function FastApp() {
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              className="px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600"
             >
               Back
             </button>
@@ -241,7 +241,7 @@ export default function FastApp() {
             <button
               type="button"
               onClick={handleNext}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ml-auto"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 ml-auto"
             >
               Next
             </button>
