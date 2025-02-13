@@ -16,8 +16,22 @@ export async function POST() {
     });
 
     if (!rawPrivateKey || !integrationKey || !userId) {
+      console.error('Missing credentials:', {
+        hasPrivateKey: !!rawPrivateKey,
+        hasIntegrationKey: !!integrationKey,
+        hasUserId: !!userId
+      });
       return NextResponse.json(
-        { error: 'Missing DocuSign credentials' },
+        { error: 'Missing DocuSign credentials. Please check your environment variables.' },
+        { status: 401 }
+      );
+    }
+
+    // Validate private key format
+    if (!rawPrivateKey.includes('BEGIN RSA PRIVATE KEY')) {
+      console.error('Invalid private key format');
+      return NextResponse.json(
+        { error: 'Invalid private key format. Please check your DOCUSIGN_PRIVATE_KEY secret.' },
         { status: 401 }
       );
     }
