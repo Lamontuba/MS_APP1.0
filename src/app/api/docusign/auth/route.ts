@@ -7,6 +7,18 @@ export async function POST() {
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
+    if (!rawPrivateKey || !integrationKey || !userId) {
+      console.error('DocuSign Configuration:', {
+        hasPrivateKey: !!rawPrivateKey,
+        hasIntegrationKey: !!integrationKey,
+        hasUserId: !!userId
+      });
+      return NextResponse.json(
+        { error: 'Missing DocuSign credentials' },
+        { status: 401 }
+      );
+    }
+
     // Ensure private key has proper line breaks
     if (rawPrivateKey) {
       rawPrivateKey = rawPrivateKey
