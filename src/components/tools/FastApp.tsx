@@ -49,14 +49,18 @@ export default function FastApp() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create template');
+        const errorMessage = data.error || 'Failed to create template';
+        console.error('Template creation error:', errorMessage);
+        alert(errorMessage);
+        return;
       }
 
       // Handle success
       setCurrentStep(4);
     } catch (error) {
       console.error('Error creating elastic template:', error);
-      alert(error.message || 'Failed to create template. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      alert(errorMessage);
     }
   };
 

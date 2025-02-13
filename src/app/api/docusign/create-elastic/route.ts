@@ -8,6 +8,13 @@ export async function POST(request: Request) {
     const accessToken = await getDocuSignToken();
     const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
 
+    if (!accessToken || !accountId) {
+      return NextResponse.json(
+        { error: 'Missing DocuSign configuration' },
+        { status: 500 }
+      );
+    }
+
     const response = await fetch(
       `https://demo.docusign.net/clickapi/v1/accounts/${accountId}/clickwraps`,
       {
@@ -23,16 +30,20 @@ export async function POST(request: Request) {
       }
     );
 
+    const responseData = await response.json();
+
     if (!response.ok) {
-      throw new Error('Failed to create elastic template');
+      return NextResponse.json(
+        { error: responseData.message || 'Failed to create elastic template' },
+        { status: response.status }
+      );
     }
 
-    const result = await response.json();
-    return NextResponse.json(result);
+    return NextResponse.json(responseData);
   } catch (error) {
     console.error('Error creating elastic template:', error);
     return NextResponse.json(
-      { error: 'Failed to create elastic template' },
+      { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     );
   }
