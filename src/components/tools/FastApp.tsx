@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { FilePlus, Check } from 'lucide-react';
 
@@ -46,9 +45,9 @@ export default function FastApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
-      
+
       if (!response.ok) throw new Error('Failed to create template');
-      
+
       // Handle success
       setCurrentStep(4);
     } catch (error) {
@@ -96,7 +95,7 @@ export default function FastApp() {
               placeholder="Business Name"
               value={formData.businessName}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="text"
@@ -104,7 +103,7 @@ export default function FastApp() {
               placeholder="Business Address"
               value={formData.businessAddress}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="tel"
@@ -112,7 +111,7 @@ export default function FastApp() {
               placeholder="Business Phone"
               value={formData.businessPhone}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="email"
@@ -120,7 +119,7 @@ export default function FastApp() {
               placeholder="Business Email"
               value={formData.businessEmail}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
           </div>
         )}
@@ -134,7 +133,7 @@ export default function FastApp() {
               placeholder="Owner Name"
               value={formData.ownerName}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="text"
@@ -142,7 +141,7 @@ export default function FastApp() {
               placeholder="Owner Title"
               value={formData.ownerTitle}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="tel"
@@ -150,7 +149,7 @@ export default function FastApp() {
               placeholder="Owner Phone"
               value={formData.ownerPhone}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="email"
@@ -158,7 +157,7 @@ export default function FastApp() {
               placeholder="Owner Email"
               value={formData.ownerEmail}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
           </div>
         )}
@@ -172,7 +171,7 @@ export default function FastApp() {
               placeholder="Bank Name"
               value={formData.bankName}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="text"
@@ -180,7 +179,7 @@ export default function FastApp() {
               placeholder="Account Type"
               value={formData.accountType}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="text"
@@ -188,7 +187,7 @@ export default function FastApp() {
               placeholder="Routing Number"
               value={formData.routingNumber}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
             <input
               type="text"
@@ -196,7 +195,7 @@ export default function FastApp() {
               placeholder="Account Number"
               value={formData.accountNumber}
               onChange={handleInputChange}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-zinc-800 text-white"
             />
           </div>
         )}
