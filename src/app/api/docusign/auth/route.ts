@@ -28,9 +28,18 @@ export async function POST() {
       .replace(/["']/g, '')
       .trim();
 
+    // Ensure proper RSA key format
     if (!rawPrivateKey.includes('-----BEGIN RSA PRIVATE KEY-----')) {
       rawPrivateKey = `-----BEGIN RSA PRIVATE KEY-----\n${rawPrivateKey}\n-----END RSA PRIVATE KEY-----`;
     }
+
+    // Add line breaks every 64 characters in the key body
+    const keyParts = rawPrivateKey.split('\n');
+    const header = keyParts[0];
+    const footer = keyParts[keyParts.length - 1];
+    const keyBody = keyParts.slice(1, -1).join('');
+    const formattedBody = keyBody.match(/.{1,64}/g)?.join('\n') || '';
+    rawPrivateKey = `${header}\n${formattedBody}\n${footer}`;
 
     const payload = {
       iss: integrationKey,
