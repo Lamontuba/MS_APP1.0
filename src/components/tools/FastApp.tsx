@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 import SignatureCanvas from '../SignatureCanvas';
@@ -35,7 +34,7 @@ const FastApp = () => {
     signatureDate: new Date().toISOString().split('T')[0],
     ipAddress: "",
     location: "",
-    
+
     // Owner Information
     ownerName: "",
     ownerTitle: "",
@@ -43,20 +42,20 @@ const FastApp = () => {
     ownerEmail: "",
     ownerSSN: "",
     ownershipPercentage: "",
-    
+
     // Processing Information
     monthlyVolume: "",
     averageTicket: "",
     maxTicket: "",
     businessCategory: "",
     processingMethods: [],
-    
+
     // Bank Information
     bankName: "",
     routingNumber: "",
     accountNumber: "",
     accountType: "",
-    
+
     // Signature Information
     signature: "",
     signatureDate: new Date().toISOString().split('T')[0],
@@ -109,9 +108,8 @@ const FastApp = () => {
         signatureDate: formData.signatureDate
       });
 
-      // Create DocuSign envelope from template
+      // Create elastic template and agreement
       try {
-        // Create elastic template first
         const elasticTemplateData = {
           name: `Merchant Application - ${formData.businessName}`,
           documents: [{
@@ -174,7 +172,7 @@ const FastApp = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(envelopeData)
+          body: JSON.stringify(agreementData) // Corrected to agreementData
         });
 
         if (!response.ok) {
@@ -186,7 +184,7 @@ const FastApp = () => {
         console.error('DocuSign error:', error);
         alert("Application saved but document creation failed. Please contact support.");
       }
-      
+
       // Reset form
       setFormData(prev => ({
         ...Object.keys(prev).reduce((acc, key) => ({...acc, [key]: ""}), {}),
@@ -222,7 +220,7 @@ const FastApp = () => {
             </div>
           </div>
         );
-      
+
       case 2:
         return (
           <div className="space-y-4">
