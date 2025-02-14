@@ -37,9 +37,7 @@ export async function POST(request: Request) {
     );
 
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('DocuSign API error:', errorData);
-      return NextResponse.json({ error: errorData.message || 'Failed to create envelope' }, { status: response.status });
+      throw new Error('Failed to create envelope');
     }
 
     const data = await response.json();

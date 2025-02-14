@@ -112,13 +112,8 @@ export async function createAndSendEnvelope(formData: FormData, signerEmail: str
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('DocuSign envelope error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: error,
-          envelope: envelope
-        });
-        throw new Error(`DocuSign API error: ${error.message || error.errorCode || 'Failed to create envelope'}`);
+        console.error('DocuSign envelope error:', error);
+        throw new Error('Failed to create envelope');
       }
 
       return response.json();
