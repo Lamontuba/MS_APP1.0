@@ -32,7 +32,7 @@ export async function POST() {
       aud: 'account-d.docusign.com',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
-      scope: 'signature impersonation'
+      scope: 'signature impersonation click.manage click.send'
     };
 
     console.log('Attempting JWT signing with payload:', {
