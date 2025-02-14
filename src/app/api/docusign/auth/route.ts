@@ -3,7 +3,9 @@ import jwt from 'jsonwebtoken';
 
 export async function POST() {
   try {
+    // Get private key from .env file
     let rawPrivateKey = process.env.DOCUSIGN_PRIVATE_KEY;
+    // Get other credentials from Replit Secrets
     const integrationKey = process.env.DOCUSIGN_INTEGRATION_KEY;
     const userId = process.env.DOCUSIGN_USER_ID;
 
