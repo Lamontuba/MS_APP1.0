@@ -48,7 +48,7 @@ export async function POST() {
       aud: 'account-d.docusign.com',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
-      scope: 'signature impersonation organization_read'
+      scope: 'signature impersonation click.manage click.send'
     };
 
     const token = jwt.sign(payload, privateKey, { 
