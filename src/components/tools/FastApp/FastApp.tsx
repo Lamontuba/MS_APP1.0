@@ -16,6 +16,15 @@ export interface FormData {
   signature?: string;
 }
 
+type StepComponentProps = {
+  formData: FormData;
+  onChange: (field: string, value: string) => void;
+  onNext: () => void;
+  onBack: () => void;
+  inputClassName: string;
+  setFormData?: React.Dispatch<React.SetStateAction<FormData>>;
+};
+
 const FastApp = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>({
@@ -32,10 +41,22 @@ const FastApp = () => {
   };
 
   const steps = [
-    { title: 'Business Information', component: BusinessInfoForm },
-    { title: 'Owner Information', component: OwnerInfoForm },
-    { title: 'Banking Information', component: BankingInfoForm },
-    { title: 'Sign & Submit', component: SignatureCapture },
+    { 
+      title: 'Business Information', 
+      component: (props: StepComponentProps) => <BusinessInfoForm {...props} /> 
+    },
+    { 
+      title: 'Owner Information', 
+      component: (props: StepComponentProps) => <OwnerInfoForm {...props} /> 
+    },
+    { 
+      title: 'Banking Information', 
+      component: (props: StepComponentProps) => <BankingInfoForm {...props} /> 
+    },
+    { 
+      title: 'Sign & Submit', 
+      component: (props: StepComponentProps) => <SignatureCapture {...props} setFormData={setFormData} /> 
+    }
   ];
 
   const inputClassName = `
@@ -60,6 +81,36 @@ const FastApp = () => {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      if (!formData.ownerEmail || !formData.ownerName) {
+        throw new Error('Owner email and name are required');
+      }
+
+      const response = await fetch('/api/docusign/create-envelope', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create envelope');
+      }
+
+      console.log('Envelope created:', result.envelopeId);
+      // Show success message
+      alert('Document sent successfully!');
+      
+    } catch (error) {
+      console.error('Detailed error:', error);
+      alert(error instanceof Error ? error.message : 'Failed to create envelope');
     }
   };
 
@@ -130,7 +181,7 @@ const FastApp = () => {
                 Back
               </button>
               <button
-                onClick={handleNext}
+                onClick={currentStep === steps.length - 1 ? handleSubmit : handleNext}
                 className={`px-6 py-3 rounded-lg text-white transition-all duration-200
                   ${currentStep === steps.length - 1
                     ? 'bg-emerald-600 hover:bg-emerald-500'
