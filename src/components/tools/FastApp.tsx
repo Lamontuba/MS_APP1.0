@@ -1,328 +1,367 @@
-"use client";
-import React, { useState, useEffect } from 'react';
-import SignatureCanvas from '../SignatureCanvas';
-import { db, auth } from "@/lib/firebase";
-import { collection, addDoc, updateDoc } from "firebase/firestore";
-import { createAndSendEnvelope } from '@/lib/docusign';
+'use client';
 
-const FastApp = () => {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState<Record<string, string>>({
-    businessName: "",
-    dbaName: "",
-    businessAddress: "",
-    businessType: "",
-    taxId: "",
-    businessPhone: "",
-    businessEmail: "",
-    ownerName: "",
-    ownerTitle: "",
-    ownerPhone: "",
-    ownerEmail: "",
-    ownerSSN: "",
-    ownershipPercentage: "",
-    monthlyVolume: "",
-    averageTicket: "",
-    maxTicket: "",
-    businessCategory: "",
-    processingMethods: "",
-    bankName: "",
-    routingNumber: "",
-    accountNumber: "",
-    accountType: "",
-    signature: "",
-    signatureDate: new Date().toISOString().split('T')[0],
-    ipAddress: "",
-    location: "",
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { FormData } from '@/lib/docusign-service';
 
-    // Owner Information
-    ownerName: "",
-    ownerTitle: "",
-    ownerPhone: "",
-    ownerEmail: "",
-    ownerSSN: "",
-    ownershipPercentage: "",
+export default function FastApp() {
+  const [status, setStatus] = useState<{
+    loading: boolean;
+    error?: string;
+    success?: boolean;
+    signingUrl?: string;
+  }>({ loading: false });
 
-    // Processing Information
-    monthlyVolume: "",
-    averageTicket: "",
-    maxTicket: "",
-    businessCategory: "",
-    processingMethods: [],
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
-    // Bank Information
-    bankName: "",
-    routingNumber: "",
-    accountNumber: "",
-    accountType: "",
-
-    // Signature Information
-    signature: "",
-    signatureDate: new Date().toISOString().split('T')[0],
-    ipAddress: "",
-    location: "",
-    additionalSigners: []
-  });
-
-  // Get IP and location on component mount
-  useEffect(() => {
-    const getIpAddress = async () => {
-      try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        setFormData(prev => ({...prev, ipAddress: data.ip}));
-      } catch (error) {
-        console.error('Error fetching IP:', error);
-      }
-    };
-    getIpAddress();
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value || ''
-    }));
-  };
-
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleGrantConsent = async () => {
     try {
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error("User must be authenticated");
+      const response = await fetch('/api/docusign/get-consent-url');
+      const data = await response.json();
+      
+      if (data.consentUrl) {
+        window.open(data.consentUrl, '_blank');
+        setStatus(prev => ({
+          ...prev,
+          error: 'After granting consent in the new window, please try sending the envelope again.'
+        }));
+      } else {
+        setStatus(prev => ({
+          ...prev,
+          error: 'Failed to get consent URL'
+        }));
       }
-
-      // Save to Firebase first
-      try {
-        const docRef = await addDoc(collection(db, "applications"), {
-          ...formData,
-          userId: user.uid,
-          createdAt: new Date(),
-          status: "pending",
-          signature: formData.signature,
-          signatureDate: formData.signatureDate
-        });
-        console.log("Application saved to Firebase with ID:", docRef.id);
-      } catch (firebaseError) {
-        console.error("Firebase save error:", firebaseError);
-        throw new Error("Failed to save application data");
-      }
-
-      // Then create DocuSign envelope
-      try {
-        const envelopeData = {
-          templateId: process.env.NEXT_PUBLIC_DOCUSIGN_TEMPLATE_ID,
-          templateData: {
-            businessName: formData.businessName,
-            dbaName: formData.dbaName,
-            businessAddress: formData.businessAddress,
-            businessPhone: formData.businessPhone,
-            businessEmail: formData.businessEmail,
-            taxId: formData.taxId,
-            ownerName: formData.ownerName,
-            ownerTitle: formData.ownerTitle,
-            ownerPhone: formData.ownerPhone,
-            ownerEmail: formData.ownerEmail,
-            monthlyVolume: formData.monthlyVolume,
-            averageTicket: formData.averageTicket,
-            maxTicket: formData.maxTicket,
-            bankName: formData.bankName,
-            routingNumber: formData.routingNumber,
-            accountNumber: formData.accountNumber,
-            signature: formData.signature,
-            signatureDate: formData.signatureDate
-          }
-        };
-
-        console.log('Sending envelope data:', envelopeData);
-
-        const response = await fetch('/api/docusign/create-envelope', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(envelopeData)
-        });
-
-        const data = await response.json();
-
-        console.log('DocuSign response:', {
-          status: response.status,
-          statusText: response.statusText,
-          data: data
-        });
-
-        if (!response.ok) {
-          throw new Error(`DocuSign API error: ${data.error || 'Unknown error'}`);
-        }
-
-        alert("Application submitted and document created successfully!");
-      } catch (error) {
-        console.error('DocuSign error:', error);
-        alert("Application saved but document creation failed. Please contact support.  Error details: " + error.message);
-      }
-
-      // Reset form
-      setFormData(prev => ({
-        ...Object.keys(prev).reduce((acc, key) => ({...acc, [key]: ""}), {}),
-        signatureDate: new Date().toISOString().split('T')[0]
+    } catch (err) {
+      setStatus(prev => ({
+        ...prev,
+        error: 'Failed to get consent URL'
       }));
-      setStep(1);
-    } catch (error) {
-      console.error("Error submitting application:", error);
-      alert("Error submitting application. Please try again. Error details: " + error.message);
     }
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Business Information</h2>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Business Name</label>
-              <input type="text" name="businessName" value={formData.businessName} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">DBA Name</label>
-              <input type="text" name="dbaName" value={formData.dbaName} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Business Address</label>
-              <input type="text" name="businessAddress" value={formData.businessAddress} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div className="flex justify-end">
-              <button onClick={nextStep} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Next</button>
-            </div>
-          </div>
-        );
+  const onSubmit = async (data: FormData) => {
+    setStatus({ loading: true });
 
-      case 2:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Business Phone</label>
-              <input type="tel" name="businessPhone" value={formData.businessPhone} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Business Email</label>
-              <input type="email" name="businessEmail" value={formData.businessEmail} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Tax ID</label>
-              <input type="text" name="taxId" value={formData.taxId} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div className="flex justify-between">
-              <button onClick={prevStep} className="bg-zinc-600 hover:bg-zinc-700 text-white px-4 py-2 rounded-md">Back</button>
-              <button onClick={nextStep} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Next</button>
-            </div>
-          </div>
-        );
+    try {
+      // First, create the envelope
+      const createResponse = await fetch('/api/docusign/create-envelope', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          signerEmail: data.businessEmail,
+          signerName: data.businessName,
+          formData: {
+            businessName: data.businessName,
+            dbaName: data.dbaName,
+            businessAddress: data.businessAddress,
+            businessPhone: data.businessPhone,
+            businessEmail: data.businessEmail,
+            taxId: data.taxId,
+            ownerName: data.ownerName,
+            ownerTitle: data.ownerTitle,
+            ownerPhone: data.ownerPhone,
+            ownerEmail: data.ownerEmail,
+            monthlyVolume: data.monthlyVolume,
+            averageTicket: data.averageTicket,
+            maxTicket: data.maxTicket,
+            bankName: data.bankName,
+            routingNumber: data.routingNumber,
+            accountNumber: data.accountNumber,
+            signature: data.signature,
+            signatureDate: new Date().toISOString().split('T')[0]
+          }
+        }),
+      });
 
-      case 3:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Owner Information</h2>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Owner Name</label>
-              <input type="text" name="ownerName" value={formData.ownerName} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Title</label>
-              <input type="text" name="ownerTitle" value={formData.ownerTitle} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Owner Phone</label>
-              <input type="tel" name="ownerPhone" value={formData.ownerPhone} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Owner Email</label>
-              <input type="email" name="ownerEmail" value={formData.ownerEmail} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div className="flex justify-between">
-              <button onClick={prevStep} className="bg-zinc-600 hover:bg-zinc-700 text-white px-4 py-2 rounded-md">Back</button>
-              <button onClick={nextStep} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Next</button>
-            </div>
-          </div>
-        );
+      const createResult = await createResponse.json();
 
-      case 4:
-        return (
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Processing Information</h2>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Monthly Volume</label>
-              <input type="text" name="monthlyVolume" value={formData.monthlyVolume} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Average Ticket</label>
-              <input type="text" name="averageTicket" value={formData.averageTicket} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Max Ticket</label>
-              <input type="text" name="maxTicket" value={formData.maxTicket} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div className="flex justify-between">
-              <button onClick={prevStep} className="bg-zinc-600 hover:bg-zinc-700 text-white px-4 py-2 rounded-md">Back</button>
-              <button onClick={nextStep} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Next</button>
-            </div>
-          </div>
-        );
+      if (!createResponse.ok) {
+        throw new Error(createResult.message || 'Failed to create envelope');
+      }
 
-      case 5:
-        return (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h2 className="text-xl font-semibold mb-4">Sign & Submit</h2>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300 mb-2">Draw Signature</label>
-              <SignatureCanvas
-                onChange={(signature) => setFormData({ ...formData, signature })}
-                width={400}
-                height={150}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-300">Date</label>
-              <input type="date" name="signatureDate" value={formData.signatureDate} onChange={handleChange} className="mt-1 block w-full p-2 bg-zinc-800/50 border border-zinc-700 rounded-md" required />
-            </div>
-            <div className="flex justify-between">
-              <button type="button" onClick={prevStep} className="bg-zinc-600 hover:bg-zinc-700 text-white px-4 py-2 rounded-md">Back</button>
-              <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">Submit Application</button>
-            </div>
-          </form>
-        );
+      // Then, get the signing URL
+      const signingResponse = await fetch('/api/docusign/get-signing-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          envelopeId: createResult.envelopeId,
+          signerEmail: data.businessEmail,
+          signerName: data.businessName,
+        }),
+      });
 
-      default:
-        return null;
+      const signingResult = await signingResponse.json();
+
+      if (!signingResponse.ok) {
+        throw new Error(signingResult.message || 'Failed to get signing URL');
+      }
+
+      setStatus({
+        loading: false,
+        success: true,
+        signingUrl: signingResult.signingUrl
+      });
+    } catch (err) {
+      setStatus({
+        loading: false,
+        error: err instanceof Error ? err.message : 'An error occurred'
+      });
     }
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          {[1, 2, 3, 4, 5].map((stepNumber) => (
-            <div
-              key={stepNumber}
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step >= stepNumber ? 'bg-emerald-600' : 'bg-zinc-700'
-              }`}
-            >
-              {stepNumber}
-            </div>
-          ))}
-        </div>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h1 className="text-2xl font-bold mb-6">Merchant Application</h1>
+
+      <div className="mb-6">
+        <p className="text-sm text-gray-600 mb-2">
+          First time using this app? You'll need to grant consent to DocuSign:
+        </p>
+        <button
+          onClick={handleGrantConsent}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Grant DocuSign Consent
+        </button>
       </div>
-      {renderStep()}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Business Information */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Name
+          </label>
+          <input
+            type="text"
+            {...register('businessName', { required: 'Business name is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.businessName && (
+            <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            DBA Name
+          </label>
+          <input
+            type="text"
+            {...register('dbaName')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Address
+          </label>
+          <input
+            type="text"
+            {...register('businessAddress', { required: 'Business address is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.businessAddress && (
+            <p className="mt-1 text-sm text-red-600">{errors.businessAddress.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Tax ID
+          </label>
+          <input
+            type="text"
+            {...register('taxId')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Phone
+          </label>
+          <input
+            type="tel"
+            {...register('businessPhone', { required: 'Business phone is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.businessPhone && (
+            <p className="mt-1 text-sm text-red-600">{errors.businessPhone.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Business Email
+          </label>
+          <input
+            type="email"
+            {...register('businessEmail', { required: 'Business email is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.businessEmail && (
+            <p className="mt-1 text-sm text-red-600">{errors.businessEmail.message}</p>
+          )}
+        </div>
+
+        {/* Owner Information */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Owner Name
+          </label>
+          <input
+            type="text"
+            {...register('ownerName', { required: 'Owner name is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.ownerName && (
+            <p className="mt-1 text-sm text-red-600">{errors.ownerName.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Owner Title
+          </label>
+          <input
+            type="text"
+            {...register('ownerTitle', { required: 'Owner title is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.ownerTitle && (
+            <p className="mt-1 text-sm text-red-600">{errors.ownerTitle.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Owner Phone
+          </label>
+          <input
+            type="tel"
+            {...register('ownerPhone', { required: 'Owner phone is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.ownerPhone && (
+            <p className="mt-1 text-sm text-red-600">{errors.ownerPhone.message}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Owner Email
+          </label>
+          <input
+            type="email"
+            {...register('ownerEmail', { required: 'Owner email is required' })}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+          {errors.ownerEmail && (
+            <p className="mt-1 text-sm text-red-600">{errors.ownerEmail.message}</p>
+          )}
+        </div>
+
+        {/* Processing Information */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Monthly Volume
+          </label>
+          <input
+            type="text"
+            {...register('monthlyVolume')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Average Ticket
+          </label>
+          <input
+            type="text"
+            {...register('averageTicket')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Max Ticket
+          </label>
+          <input
+            type="text"
+            {...register('maxTicket')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        {/* Bank Information */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Bank Name
+          </label>
+          <input
+            type="text"
+            {...register('bankName')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Routing Number
+          </label>
+          <input
+            type="text"
+            {...register('routingNumber')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700">
+            Account Number
+          </label>
+          <input
+            type="text"
+            {...register('accountNumber')}
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={status.loading}
+          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+        >
+          {status.loading ? 'Submitting...' : 'Submit Application'}
+        </button>
+      </form>
+
+      {status.error && (
+        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-sm text-red-600">{status.error}</p>
+        </div>
+      )}
+
+      {status.success && status.signingUrl && (
+        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
+          <p className="text-sm text-green-600 mb-4">
+            Application submitted successfully! Please sign the document below:
+          </p>
+          <iframe
+            src={status.signingUrl}
+            width="100%"
+            height="800px"
+            className="border-0"
+          />
+        </div>
+      )}
     </div>
   );
-};
-
-export default FastApp;
+}
