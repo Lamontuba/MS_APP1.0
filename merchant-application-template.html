@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .field {
+            margin-bottom: 15px;
+        }
+        .field-label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .signature-section {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Merchant Application</h1>
+    </div>
+
+    <div class="section">
+        <h2>Business Information</h2>
+        <div class="field">
+            <span class="field-label">Business Name:</span>
+            <span data-tab-label="businessName" data-tab-type="text">∟Business Name∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Business Address:</span>
+            <span data-tab-label="businessAddress" data-tab-type="text">∟Business Address∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Business Phone:</span>
+            <span data-tab-label="businessPhone" data-tab-type="text">∟Business Phone∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Business Email:</span>
+            <span data-tab-label="businessEmail" data-tab-type="text">∟Business Email∟</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Owner Information</h2>
+        <div class="field">
+            <span class="field-label">Owner Name:</span>
+            <span data-tab-label="ownerName" data-tab-type="text">∟Owner Name∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Owner Title:</span>
+            <span data-tab-label="ownerTitle" data-tab-type="text">∟Owner Title∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Owner Phone:</span>
+            <span data-tab-label="ownerPhone" data-tab-type="text">∟Owner Phone∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Owner Email:</span>
+            <span data-tab-label="ownerEmail" data-tab-type="text">∟Owner Email∟</span>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Business Details</h2>
+        <div class="field">
+            <span class="field-label">Monthly Volume:</span>
+            <span data-tab-label="monthlyVolume" data-tab-type="text">∟Monthly Volume∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Average Ticket:</span>
+            <span data-tab-label="averageTicket" data-tab-type="text">∟Average Ticket∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Max Ticket:</span>
+            <span data-tab-label="maxTicket" data-tab-type="text">∟Max Ticket∟</span>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <p>By signing below, I certify that all information provided is accurate and complete.</p>
+        <div class="field">
+            <span class="field-label">Signature:</span>
+            <span data-tab-label="signature" data-tab-type="signature">∟Sign Here∟</span>
+        </div>
+        <div class="field">
+            <span class="field-label">Date:</span>
+            <span data-tab-label="signatureDate" data-tab-type="date">∟Date∟</span>
+        </div>
+    </div>
+</body>
+</html>
