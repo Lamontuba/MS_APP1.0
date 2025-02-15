@@ -9,14 +9,11 @@ export interface DocuSignError extends Error {
 }
 
 export interface FormData {
-  businessName: string;
-  businessAddress: string;
-  businessPhone: string;
-  businessEmail: string;
-  ownerName: string;
-  ownerTitle: string;
-  ownerPhone: string;
-  ownerEmail: string;
+  email: string;
+  phone: string;
+  signature1: string;
+  signature2: string;
+  date: string;
 }
 
 export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
@@ -30,17 +27,26 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
       accountId,
       templateId,
       adminEmail,
-      hasAccessToken: !!accessToken
+      hasAccessToken: !!accessToken,
+      formData: {
+        ...formData,
+        signature1: '[SIGNATURE_1_DATA]',
+        signature2: '[SIGNATURE_2_DATA]'
+      }
     });
 
     if (!accountId || !templateId) {
       throw new Error('Missing DocuSign configuration');
     }
 
+    // Convert signatures to base64 format
+    const signature1Image = formData.signature1.split(',')[1];
+    const signature2Image = formData.signature2.split(',')[1];
+
     const envelope = {
       templateId,
       status: 'sent',
-      emailSubject: `New Merchant Application - ${formData.businessName}`,
+      emailSubject: `New Application - ${formData.email}`,
       templateRoles: [{
         email: adminEmail,
         name: 'Administrator',
@@ -48,43 +54,70 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
         tabs: {
           textTabs: [
             {
-              tabLabel: 'businessName',
-              value: formData.businessName
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '150',
+              yPosition: '300',
+              font: 'helvetica',
+              fontSize: 'size11',
+              value: formData.email
             },
             {
-              tabLabel: 'businessAddress',
-              value: formData.businessAddress
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '150',
+              yPosition: '350',
+              font: 'helvetica',
+              fontSize: 'size11',
+              value: formData.phone
             },
             {
-              tabLabel: 'businessPhone',
-              value: formData.businessPhone
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '150',
+              yPosition: '450',
+              font: 'helvetica',
+              fontSize: 'size11',
+              value: formData.date
+            }
+          ],
+          signatureTabs: [
+            {
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '150',
+              yPosition: '400',
+              name: formData.email,
+              optional: false,
+              signatureBase64: signature1Image
             },
             {
-              tabLabel: 'businessEmail',
-              value: formData.businessEmail
-            },
-            {
-              tabLabel: 'ownerName',
-              value: formData.ownerName
-            },
-            {
-              tabLabel: 'ownerTitle',
-              value: formData.ownerTitle
-            },
-            {
-              tabLabel: 'ownerPhone',
-              value: formData.ownerPhone
-            },
-            {
-              tabLabel: 'ownerEmail',
-              value: formData.ownerEmail
+              documentId: '1',
+              pageNumber: '1',
+              xPosition: '150',
+              yPosition: '550',
+              name: formData.email,
+              optional: false,
+              signatureBase64: signature2Image
             }
           ]
         }
       }]
     };
 
-    console.log('Sending envelope to admin:', JSON.stringify(envelope, null, 2));
+    console.log('Sending envelope to admin:', JSON.stringify({
+      ...envelope,
+      templateRoles: [{
+        ...envelope.templateRoles[0],
+        tabs: {
+          ...envelope.templateRoles[0].tabs,
+          signatureTabs: envelope.templateRoles[0].tabs.signatureTabs.map(tab => ({
+            ...tab,
+            signatureBase64: '[SIGNATURE_DATA_HIDDEN]'
+          }))
+        }
+      }]
+    }, null, 2));
 
     const url = `https://demo.docusign.net/restapi/v2.1/accounts/${accountId}/envelopes`;
     console.log('DocuSign API URL:', url);
@@ -99,13 +132,14 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
     });
 
     const responseText = await response.text();
-    console.log('Envelope creation response:', responseText);
+    console.log('DocuSign envelope creation response:', responseText);
 
     if (!response.ok) {
       let errorMessage = `Failed to send envelope: ${response.status} ${response.statusText}`;
       try {
         const error = JSON.parse(responseText);
         errorMessage = error.message || errorMessage;
+        console.error('DocuSign error details:', error);
       } catch (e) {
         // If we can't parse the error JSON, use the status text
       }

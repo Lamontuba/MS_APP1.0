@@ -1,5 +1,16 @@
 import { NextResponse } from 'next/server';
-import { createEmbeddedSigningUrl } from '@/lib/docusign-service';
+
+export async function GET(request: Request) {
+  try {
+    return NextResponse.json({ error: 'Not implemented' }, { status: 501 });
+  } catch (error) {
+    console.error('Error in get-signing-url:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {

@@ -1,8 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { FormData } from '@/lib/docusign-service';
+import dynamic from 'next/dynamic';
+
+const SignaturePad = dynamic(() => import('react-signature-pad-wrapper'), {
+  ssr: false
+});
 
 export default function FastApp() {
   const [status, setStatus] = useState<{
@@ -12,7 +17,9 @@ export default function FastApp() {
     message?: string;
   }>({ loading: false });
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const signaturePad1Ref = useRef<any>(null);
+  const signaturePad2Ref = useRef<any>(null);
+  const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormData>();
 
   const handleGrantConsent = async () => {
     try {
@@ -40,29 +47,60 @@ export default function FastApp() {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (!signaturePad1Ref.current || signaturePad1Ref.current.isEmpty()) {
+      setStatus({
+        loading: false,
+        error: 'Please provide your first signature'
+      });
+      return;
+    }
+
+    if (!signaturePad2Ref.current || signaturePad2Ref.current.isEmpty()) {
+      setStatus({
+        loading: false,
+        error: 'Please provide your second signature'
+      });
+      return;
+    }
+
     setStatus({ loading: true });
 
     try {
+      // Add signatures and date to form data
+      const formData = {
+        ...data,
+        signature1: signaturePad1Ref.current.toDataURL(),
+        signature2: signaturePad2Ref.current.toDataURL(),
+        date: new Date().toLocaleDateString('en-US')
+      };
+
+      console.log('Submitting form data:', {
+        ...formData,
+        signature1: '[SIGNATURE_1_DATA]',
+        signature2: '[SIGNATURE_2_DATA]'
+      });
+
       const response = await fetch('/api/docusign/create-envelope', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          formData: data
+          formData
         }),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        if (error.error === 'auth_required') {
+        if (responseData.error === 'auth_required') {
           setStatus({
             loading: false,
             error: 'DocuSign authentication required. Please click "Grant DocuSign Consent" and try again.'
           });
           return;
         }
-        throw new Error(error.message || 'Failed to send envelope');
+        throw new Error(responseData.message || 'Failed to send envelope');
       }
 
       setStatus({
@@ -70,176 +108,130 @@ export default function FastApp() {
         success: true,
         message: 'Application sent successfully! An administrator will review your application.'
       });
+
+      // Clear signature pads
+      signaturePad1Ref.current?.clear();
+      signaturePad2Ref.current?.clear();
     } catch (err) {
+      console.error('Error submitting form:', err);
       setStatus({
         loading: false,
-        error: err instanceof Error ? err.message : 'An error occurred'
+        error: err instanceof Error ? err.message : 'Failed to send envelope'
       });
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">Merchant Application</h1>
+      <h2 className="text-2xl font-bold mb-4">Fast Application</h2>
 
-      <div className="mb-6">
-        <p className="text-sm text-gray-600 mb-2">
-          First time using this app? You'll need to grant consent to DocuSign:
-        </p>
-        <button
-          type="button"
-          onClick={handleGrantConsent}
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Grant DocuSign Consent
-        </button>
-      </div>
+      <p className="text-gray-700 mb-6">
+        This document is provided as a sample template for testing DocuSign integration.
+        Please complete the following fields:
+      </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        {/* Business Information */}
         <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Business Information</h2>
-          
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Business Name
-            </label>
-            <input
-              type="text"
-              {...register('businessName', { required: 'Business name is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.businessName && (
-              <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Business Address
-            </label>
-            <input
-              type="text"
-              {...register('businessAddress', { required: 'Business address is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.businessAddress && (
-              <p className="mt-1 text-sm text-red-600">{errors.businessAddress.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Business Phone
-            </label>
-            <input
-              type="tel"
-              {...register('businessPhone', { required: 'Business phone is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.businessPhone && (
-              <p className="mt-1 text-sm text-red-600">{errors.businessPhone.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Business Email
+              Email:
             </label>
             <input
               type="email"
-              {...register('businessEmail', { required: 'Business email is required' })}
+              {...register('email', { required: 'Email is required' })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
-            {errors.businessEmail && (
-              <p className="mt-1 text-sm text-red-600">{errors.businessEmail.message}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Owner Information */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Owner Information</h2>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Owner Name
-            </label>
-            <input
-              type="text"
-              {...register('ownerName', { required: 'Owner name is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.ownerName && (
-              <p className="mt-1 text-sm text-red-600">{errors.ownerName.message}</p>
+            {errors.email && (
+              <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Owner Title
-            </label>
-            <input
-              type="text"
-              {...register('ownerTitle', { required: 'Owner title is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.ownerTitle && (
-              <p className="mt-1 text-sm text-red-600">{errors.ownerTitle.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Owner Phone
+              Phone:
             </label>
             <input
               type="tel"
-              {...register('ownerPhone', { required: 'Owner phone is required' })}
+              {...register('phone', { required: 'Phone is required' })}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             />
-            {errors.ownerPhone && (
-              <p className="mt-1 text-sm text-red-600">{errors.ownerPhone.message}</p>
+            {errors.phone && (
+              <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Owner Email
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Signature 1:
             </label>
-            <input
-              type="email"
-              {...register('ownerEmail', { required: 'Owner email is required' })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-            {errors.ownerEmail && (
-              <p className="mt-1 text-sm text-red-600">{errors.ownerEmail.message}</p>
-            )}
+            <div className="border rounded-md p-2 bg-white">
+              <SignaturePad
+                ref={signaturePad1Ref}
+                options={{
+                  backgroundColor: 'rgb(255, 255, 255)'
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => signaturePad1Ref.current?.clear()}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-500"
+            >
+              Clear Signature
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Signature 2:
+            </label>
+            <div className="border rounded-md p-2 bg-white">
+              <SignaturePad
+                ref={signaturePad2Ref}
+                options={{
+                  backgroundColor: 'rgb(255, 255, 255)'
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => signaturePad2Ref.current?.clear()}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-500"
+            >
+              Clear Signature
+            </button>
           </div>
         </div>
 
-        {/* Submit Button */}
-        <div>
+        <div className="flex space-x-4">
           <button
             type="submit"
             disabled={status.loading}
-            className={`w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+            className={`px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               status.loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
-            {status.loading ? 'Submitting...' : 'Submit Application'}
+            {status.loading ? 'Sending...' : 'Submit Application'}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGrantConsent}
+            className="px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Grant DocuSign Consent
           </button>
         </div>
 
         {status.error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">{status.error}</p>
+          <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {status.error}
           </div>
         )}
 
-        {status.success && status.message && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">{status.message}</p>
+        {status.success && (
+          <div className="mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+            {status.message}
           </div>
         )}
       </form>
