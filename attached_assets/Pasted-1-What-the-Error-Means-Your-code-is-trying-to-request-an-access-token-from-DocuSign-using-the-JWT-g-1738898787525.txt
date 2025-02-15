@@ -1,0 +1,87 @@
+1. What the Error Means
+Your code is trying to request an access token from DocuSign using the JWT grant flow. The snippet:
+
+js
+Copy
+if (!response.ok) {
+  const error = await response.json();
+  console.error('DocuSign token error:', error);
+  throw new Error('Failed to get DocuSign access token');
+}
+indicates that the HTTP response from DocuSign isn’t “OK” (i.e. not in the 200–299 range). When that happens, your code logs the error (which in your case appears as an empty object {}) and then throws an error.
+
+2. Common Causes and How to Investigate
+a. Incorrect or Malformed JWT Assertion
+Issue:
+The JWT assertion (JSON Web Token) that you construct might be missing required claims or isn’t properly signed.
+What to Check:
+Verify that you’re including all required fields: iss (your integration key), sub (the user ID you’re impersonating), aud (DocuSign’s auth endpoint URL), and exp (expiration).
+Ensure that your RSA private key is correctly formatted (with appropriate newline characters if needed) and matches the one registered in DocuSign.
+b. Environment Variables & Keys
+Issue:
+A misconfiguration (such as a typo in the keys or values) can result in an invalid request.
+What to Check:
+Confirm that your environment variables (DOCUSIGN_PRIVATE_KEY, DOCUSIGN_INTEGRATION_KEY, DOCUSIGN_USER_ID, and DOCUSIGN_ACCOUNT_ID) are correctly set and being used by your code.
+Make sure the integration key and private key in your code exactly match what’s in your DocuSign developer account.
+c. Missing Consent
+Issue:
+For JWT authentication, the DocuSign user must grant consent to your application.
+What to Check:
+If you haven’t done so already, have the user (or yourself, if testing) grant consent by visiting a URL like:
+perl
+Copy
+https://account-d.docusign.com/oauth/auth?response_type=code&scope=signature%20impersonation&client_id=YOUR_INTEGRATION_KEY&redirect_uri=YOUR_REDIRECT_URI
+Once consent is granted, subsequent token requests should work (assuming the JWT is correct).
+d. Endpoint and Environment Mismatch
+Issue:
+Using the wrong DocuSign endpoint can lead to unexpected errors.
+What to Check:
+For the developer (demo) environment, make sure your token request URL is:
+arduino
+Copy
+https://account-d.docusign.com/oauth/token
+If you’re targeting production, the endpoint is different.
+e. Network Issues or API Changes
+Issue:
+There may be network issues, or DocuSign’s API could have updated its requirements.
+What to Check:
+Open your browser’s network tab (or use a tool like Postman) to inspect the request and response.
+Look at the HTTP status code and any headers or raw response text that might give more details.
+Check DocuSign’s developer documentation for any changes in the authentication flow.
+3. Next Steps for Debugging
+Log Additional Details:
+
+Print the full HTTP status code and raw response text before parsing JSON:
+js
+Copy
+if (!response.ok) {
+  const rawError = await response.text();
+  console.error('DocuSign token error (raw):', rawError);
+  let error;
+  try {
+    error = JSON.parse(rawError);
+  } catch (parseError) {
+    error = { raw: rawError };
+  }
+  console.error('DocuSign token error (parsed):', error);
+  throw new Error('Failed to get DocuSign access token');
+}
+This might reveal more about the issue than an empty JSON object.
+Double-Check Your JWT Creation:
+
+Ensure that your JWT token is correctly built, signed, and not expired.
+Use JWT debugging tools (like jwt.io) to decode your JWT (without the private key) and verify the claims.
+Validate Consent:
+
+If you suspect a consent issue, try visiting the consent URL in your browser and granting permission.
+Test with Tools:
+
+Use Postman or a similar tool to manually make the token request with the same JWT and keys. This can help isolate whether the problem is in your code or with the request itself.
+Review DocuSign Documentation and Logs:
+
+Sometimes DocuSign may include hints in their API logs or documentation. Their JWT authentication guide is a good resource.
+Summary
+The error indicates that your token request to DocuSign is failing.
+Common issues include problems with your JWT assertion (missing or incorrect claims), misconfigured environment variables, missing user consent, or using the wrong endpoint.
+By adding extra logging and checking each configuration step, you can narrow down the root cause.
+Following these steps should help you identify and fix the issue preventing you from obtaining a valid DocuSign access token.

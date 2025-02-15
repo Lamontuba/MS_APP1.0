@@ -1,17 +1,21 @@
+
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
+import SignatureCanvas from '../SignatureCanvas';
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, updateDoc } from "firebase/firestore";
+import { createAndSendEnvelope } from '@/lib/docusign';
 
 const FastApp = () => {
  const [formData, setFormData] = useState({
    businessName: "",
-   businessType: "",
    email: "",
    phone: "",
    address: "",
  });
  const [submitted, setSubmitted] = useState(false);
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+ const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
    const { name, value } = e.target;
    setFormData({ ...formData, [name]: value });
  };
@@ -20,7 +24,7 @@ const FastApp = () => {
    e.preventDefault();
    console.log("Form submitted:", formData);
    setSubmitted(true);
-   setFormData({ businessName: "", businessType: "", email: "", phone: "", address: "" });
+   setFormData({ businessName: "", email: "", phone: "", address: "" });
  };
 
  const inputClasses = `
@@ -40,99 +44,32 @@ const FastApp = () => {
    [&:-webkit-autofill:focus]:!bg-zinc-800/70
  `;
 
- const selectClasses = `
-   ${inputClasses}
-   appearance-none
-   bg-zinc-800
-   text-zinc-100
- `;
-
  return (
    <div className="bg-zinc-900/50 text-white p-6 rounded-xl border border-zinc-800">
      <h2 className="text-2xl font-bold mb-4">Merchant Onboarding</h2>
      {!submitted ? (
        <form onSubmit={handleSubmit}>
-         <div className="mb-4">
-           <label htmlFor="businessName" className="block text-sm font-medium text-zinc-300">
-             Business Name
-           </label>
-           <input
-             type="text"
-             id="businessName"
-             name="businessName"
-             value={formData.businessName}
-             onChange={handleChange}
-             required
-             className={inputClasses}
-           />
-         </div>
-
-         <div className="mb-4">
-           <label htmlFor="businessType" className="block text-sm font-medium text-zinc-300">
-             Business Type
-           </label>
-           <select
-             id="businessType"
-             name="businessType"
-             value={formData.businessType}
-             onChange={handleChange}
-             required
-             className={selectClasses}
-           >
-             <option value="" className="bg-zinc-800 text-zinc-100">Select a business type</option>
-             <option value="retail" className="bg-zinc-800 text-zinc-100">Retail</option>
-             <option value="restaurant" className="bg-zinc-800 text-zinc-100">Restaurant</option>
-             <option value="service" className="bg-zinc-800 text-zinc-100">Service</option>
-             <option value="ecommerce" className="bg-zinc-800 text-zinc-100">E-commerce</option>
-             <option value="other" className="bg-zinc-800 text-zinc-100">Other</option>
-           </select>
-         </div>
-
-         <div className="mb-4">
-           <label htmlFor="email" className="block text-sm font-medium text-zinc-300">
-             Email
-           </label>
-           <input
-             type="email"
-             id="email"
-             name="email"
-             value={formData.email}
-             onChange={handleChange}
-             required
-             className={inputClasses}
-           />
-         </div>
-
-         <div className="mb-4">
-           <label htmlFor="phone" className="block text-sm font-medium text-zinc-300">
-             Phone
-           </label>
-           <input
-             type="tel"
-             id="phone"
-             name="phone"
-             value={formData.phone}
-             onChange={handleChange}
-             required
-             className={inputClasses}
-           />
-         </div>
-
-         <div className="mb-4">
-           <label htmlFor="address" className="block text-sm font-medium text-zinc-300">
-             Address
-           </label>
-           <input
-             type="text"
-             id="address"
-             name="address"
-             value={formData.address}
-             onChange={handleChange}
-             required
-             className={inputClasses}
-           />
-         </div>
-
+         {[
+           { id: "businessName", label: "Business Name", type: "text" },
+           { id: "email", label: "Email", type: "email" },
+           { id: "phone", label: "Phone", type: "tel" },
+           { id: "address", label: "Address", type: "text" }
+         ].map(field => (
+           <div key={field.id} className="mb-4">
+             <label htmlFor={field.id} className="block text-sm font-medium text-zinc-300">
+               {field.label}
+             </label>
+             <input
+               type={field.type}
+               id={field.id}
+               name={field.id}
+               value={formData[field.id as keyof typeof formData]}
+               onChange={handleChange}
+               required
+               className={inputClasses}
+             />
+           </div>
+         ))}
          <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-md transition duration-200">
            Submit
          </button>
@@ -150,4 +87,4 @@ const FastApp = () => {
  );
 };
 
-export default FastApp; 
+export default FastApp;
