@@ -1,14 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import dynamic from 'next/dynamic';
 import { FormData } from '@/lib/docusign-service';
-
-// Dynamically import the signature pad to avoid SSR issues
-const SignaturePad = dynamic(() => import('react-signature-pad-wrapper'), {
-  ssr: false,
-});
 
 export default function FastApp() {
   const [status, setStatus] = useState<{
@@ -18,13 +12,30 @@ export default function FastApp() {
     message?: string;
   }>({ loading: false });
 
-  const signaturePadRef = useRef<any>(null);
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>();
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
-  const clearSignature = () => {
-    if (signaturePadRef.current) {
-      signaturePadRef.current.clear();
-      setValue('signature', '');
+  const handleGrantConsent = async () => {
+    try {
+      const response = await fetch('/api/docusign/get-consent-url');
+      const data = await response.json();
+      
+      if (data.consentUrl) {
+        window.open(data.consentUrl, '_blank');
+        setStatus(prev => ({
+          ...prev,
+          error: 'After granting consent in the new window, please try sending the envelope again.'
+        }));
+      } else {
+        setStatus(prev => ({
+          ...prev,
+          error: 'Failed to get consent URL'
+        }));
+      }
+    } catch (err) {
+      setStatus(prev => ({
+        ...prev,
+        error: 'Failed to get consent URL'
+      }));
     }
   };
 
@@ -32,18 +43,6 @@ export default function FastApp() {
     setStatus({ loading: true });
 
     try {
-      // Get signature data
-      if (signaturePadRef.current && !signaturePadRef.current.isEmpty()) {
-        const signatureData = signaturePadRef.current.toDataURL('image/png');
-        data.signature = signatureData;
-      } else {
-        throw new Error('Signature is required');
-      }
-
-      // Set signature date
-      data.signatureDate = new Date().toISOString().split('T')[0];
-
-      // Send the envelope to admin
       const response = await fetch('/api/docusign/create-envelope', {
         method: 'POST',
         headers: {
@@ -56,6 +55,13 @@ export default function FastApp() {
 
       if (!response.ok) {
         const error = await response.json();
+        if (error.error === 'auth_required') {
+          setStatus({
+            loading: false,
+            error: 'DocuSign authentication required. Please click "Grant DocuSign Consent" and try again.'
+          });
+          return;
+        }
         throw new Error(error.message || 'Failed to send envelope');
       }
 
@@ -76,7 +82,20 @@ export default function FastApp() {
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <h1 className="text-2xl font-bold mb-6">Merchant Application</h1>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="mb-6">
+        <p className="text-sm text-gray-600 mb-2">
+          First time using this app? You'll need to grant consent to DocuSign:
+        </p>
+        <button
+          type="button"
+          onClick={handleGrantConsent}
+          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+        >
+          Grant DocuSign Consent
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Business Information */}
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Business Information</h2>
@@ -97,17 +116,6 @@ export default function FastApp() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              DBA Name
-            </label>
-            <input
-              type="text"
-              {...register('dbaName')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
               Business Address
             </label>
             <input
@@ -118,17 +126,6 @@ export default function FastApp() {
             {errors.businessAddress && (
               <p className="mt-1 text-sm text-red-600">{errors.businessAddress.message}</p>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Tax ID
-            </label>
-            <input
-              type="text"
-              {...register('taxId')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
           </div>
 
           <div>
@@ -221,110 +218,8 @@ export default function FastApp() {
           </div>
         </div>
 
-        {/* Processing Information */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Processing Information</h2>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Monthly Volume
-            </label>
-            <input
-              type="text"
-              {...register('monthlyVolume')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Average Ticket
-            </label>
-            <input
-              type="text"
-              {...register('averageTicket')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Max Ticket
-            </label>
-            <input
-              type="text"
-              {...register('maxTicket')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Bank Information */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Bank Information</h2>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Bank Name
-            </label>
-            <input
-              type="text"
-              {...register('bankName')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Routing Number
-            </label>
-            <input
-              type="text"
-              {...register('routingNumber')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Account Number
-            </label>
-            <input
-              type="text"
-              {...register('accountNumber')}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Signature Section */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Signature</h2>
-          
-          <div className="border rounded-md p-4">
-            <div className="border border-gray-300 rounded-md bg-white" style={{ height: '200px' }}>
-              <SignaturePad
-                ref={signaturePadRef}
-                options={{
-                  backgroundColor: 'rgb(255, 255, 255)',
-                  penColor: 'rgb(0, 0, 0)'
-                }}
-              />
-            </div>
-            <div className="mt-2 flex justify-end">
-              <button
-                type="button"
-                onClick={clearSignature}
-                className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-              >
-                Clear Signature
-              </button>
-            </div>
-          </div>
-        </div>
-
         {/* Submit Button */}
-        <div className="mt-6">
+        <div>
           <button
             type="submit"
             disabled={status.loading}

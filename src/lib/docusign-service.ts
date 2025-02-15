@@ -10,25 +10,13 @@ export interface DocuSignError extends Error {
 
 export interface FormData {
   businessName: string;
-  dbaName?: string;
   businessAddress: string;
   businessPhone: string;
   businessEmail: string;
-  taxId?: string;
   ownerName: string;
   ownerTitle: string;
   ownerPhone: string;
   ownerEmail: string;
-  ownerSSN?: string;
-  dateOfBirth?: string;
-  monthlyVolume?: string;
-  averageTicket?: string;
-  maxTicket?: string;
-  bankName?: string;
-  routingNumber?: string;
-  accountNumber?: string;
-  signature: string; // Base64 image of signature
-  signatureDate: string;
 }
 
 export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
@@ -36,7 +24,7 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
     const accessToken = await getDocuSignAccessToken();
     const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
     const templateId = process.env.DOCUSIGN_TEMPLATE_ID;
-    const adminEmail = process.env.DOCUSIGN_ADMIN_EMAIL || 'admin@example.com';
+    const adminEmail = process.env.DOCUSIGN_ADMIN_EMAIL || 'fpaocretv@gmail.com';
 
     console.log('DocuSign Configuration:', {
       accountId,
@@ -49,9 +37,6 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
       throw new Error('Missing DocuSign configuration');
     }
 
-    // Convert base64 signature to DocuSign format if needed
-    const signatureImage = formData.signature.split(',')[1]; // Remove data:image/png;base64, prefix
-
     const envelope = {
       templateId,
       status: 'sent',
@@ -61,38 +46,45 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
         name: 'Administrator',
         roleName: 'signer',
         tabs: {
-          textTabs: Object.entries(formData)
-            .filter(([key]) => key !== 'signature') // Exclude signature from text tabs
-            .map(([key, value]) => ({
-              tabLabel: key,
-              value: value?.toString() || ''
-            })),
-          signHereTabs: [{
-            tabLabel: 'merchantSignature',
-            imageType: 'signature',
-            signatureImageData: signatureImage,
-            stampType: 'signature',
-            name: formData.ownerName,
-            optional: false,
-            scaleValue: 1.0
-          }]
+          textTabs: [
+            {
+              tabLabel: 'businessName',
+              value: formData.businessName
+            },
+            {
+              tabLabel: 'businessAddress',
+              value: formData.businessAddress
+            },
+            {
+              tabLabel: 'businessPhone',
+              value: formData.businessPhone
+            },
+            {
+              tabLabel: 'businessEmail',
+              value: formData.businessEmail
+            },
+            {
+              tabLabel: 'ownerName',
+              value: formData.ownerName
+            },
+            {
+              tabLabel: 'ownerTitle',
+              value: formData.ownerTitle
+            },
+            {
+              tabLabel: 'ownerPhone',
+              value: formData.ownerPhone
+            },
+            {
+              tabLabel: 'ownerEmail',
+              value: formData.ownerEmail
+            }
+          ]
         }
       }]
     };
 
-    console.log('Sending envelope to admin:', JSON.stringify({
-      ...envelope,
-      templateRoles: [{
-        ...envelope.templateRoles[0],
-        tabs: {
-          ...envelope.templateRoles[0].tabs,
-          signHereTabs: [{
-            ...envelope.templateRoles[0].tabs.signHereTabs[0],
-            signatureImageData: 'BASE64_SIGNATURE_DATA_HIDDEN_FOR_LOGGING'
-          }]
-        }
-      }]
-    }, null, 2));
+    console.log('Sending envelope to admin:', JSON.stringify(envelope, null, 2));
 
     const url = `https://demo.docusign.net/restapi/v2.1/accounts/${accountId}/envelopes`;
     console.log('DocuSign API URL:', url);
