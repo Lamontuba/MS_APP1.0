@@ -1,16 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-
-interface FormData {
-  signerEmail: string;
-  signerName: string;
-  businessName: string;
-  businessAddress: string;
-  businessPhone: string;
-  businessEmail: string;
-}
 
 export default function DocuSignTest() {
   const [status, setStatus] = useState<{
@@ -19,8 +9,6 @@ export default function DocuSignTest() {
     success?: boolean;
     signingUrl?: string;
   }>({ loading: false });
-
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
   const handleGrantConsent = async () => {
     try {
@@ -47,26 +35,42 @@ export default function DocuSignTest() {
     }
   };
 
-  const onSubmit = async (data: FormData) => {
+  const handleTestEnvelope = async () => {
     setStatus({ loading: true });
 
     try {
+      // Test data
+      const testData = {
+        signerEmail: 'test@example.com',
+        signerName: 'Test User',
+        formData: {
+          businessName: 'Test Business',
+          dbaName: 'Test DBA',
+          businessAddress: '123 Test St',
+          businessPhone: '555-0123',
+          businessEmail: 'test@example.com',
+          taxId: '12-3456789',
+          ownerName: 'Test Owner',
+          ownerTitle: 'CEO',
+          ownerPhone: '555-0124',
+          ownerEmail: 'owner@example.com',
+          monthlyVolume: '50000',
+          averageTicket: '100',
+          maxTicket: '1000',
+          bankName: 'Test Bank',
+          routingNumber: '123456789',
+          accountNumber: '987654321',
+          signatureDate: new Date().toISOString().split('T')[0]
+        }
+      };
+
       // First, create the envelope
       const createResponse = await fetch('/api/docusign/create-envelope', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          signerEmail: data.signerEmail,
-          signerName: data.signerName,
-          formData: {
-            businessName: data.businessName,
-            businessAddress: data.businessAddress,
-            businessPhone: data.businessPhone,
-            businessEmail: data.businessEmail,
-          }
-        }),
+        body: JSON.stringify(testData),
       });
 
       const createResult = await createResponse.json();
@@ -83,8 +87,8 @@ export default function DocuSignTest() {
         },
         body: JSON.stringify({
           envelopeId: createResult.envelopeId,
-          signerEmail: data.signerEmail,
-          signerName: data.signerName,
+          signerEmail: testData.signerEmail,
+          signerName: testData.signerName,
         }),
       });
 
@@ -109,133 +113,57 @@ export default function DocuSignTest() {
 
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">DocuSign Test Form</h1>
+      <h1 className="text-2xl font-bold mb-6">DocuSign Test Page</h1>
 
-      <div className="mb-6">
-        <p className="text-sm text-gray-600 mb-2">
-          First time using this app? You'll need to grant consent to DocuSign:
-        </p>
-        <button
-          onClick={handleGrantConsent}
-          className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-        >
-          Grant DocuSign Consent
-        </button>
+      <div className="space-y-4">
+        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
+          <h2 className="text-lg font-semibold text-yellow-800 mb-2">Test Instructions</h2>
+          <ol className="list-decimal list-inside space-y-2 text-yellow-700">
+            <li>First time? Click "Grant DocuSign Consent" below</li>
+            <li>After granting consent, click "Send Test Envelope"</li>
+            <li>Sign the document in the iframe that appears</li>
+          </ol>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            onClick={handleGrantConsent}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          >
+            Grant DocuSign Consent
+          </button>
+
+          <button
+            onClick={handleTestEnvelope}
+            disabled={status.loading}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          >
+            {status.loading ? 'Sending...' : 'Send Test Envelope'}
+          </button>
+        </div>
+
+        {status.error && (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-600">{status.error}</p>
+          </div>
+        )}
+
+        {status.success && status.signingUrl && (
+          <div>
+            <div className="p-4 mb-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">
+                Test envelope created successfully! Please sign the document below:
+              </p>
+            </div>
+            <iframe
+              src={status.signingUrl}
+              width="100%"
+              height="800px"
+              className="border-0"
+            />
+          </div>
+        )}
       </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Signer Email
-          </label>
-          <input
-            type="email"
-            {...register('signerEmail', { required: 'Email is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.signerEmail && (
-            <p className="mt-1 text-sm text-red-600">{errors.signerEmail.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Signer Name
-          </label>
-          <input
-            type="text"
-            {...register('signerName', { required: 'Name is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.signerName && (
-            <p className="mt-1 text-sm text-red-600">{errors.signerName.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Business Name
-          </label>
-          <input
-            type="text"
-            {...register('businessName', { required: 'Business name is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.businessName && (
-            <p className="mt-1 text-sm text-red-600">{errors.businessName.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Business Address
-          </label>
-          <input
-            type="text"
-            {...register('businessAddress', { required: 'Business address is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.businessAddress && (
-            <p className="mt-1 text-sm text-red-600">{errors.businessAddress.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Business Phone
-          </label>
-          <input
-            type="tel"
-            {...register('businessPhone', { required: 'Business phone is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.businessPhone && (
-            <p className="mt-1 text-sm text-red-600">{errors.businessPhone.message}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Business Email
-          </label>
-          <input
-            type="email"
-            {...register('businessEmail', { required: 'Business email is required' })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          />
-          {errors.businessEmail && (
-            <p className="mt-1 text-sm text-red-600">{errors.businessEmail.message}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={status.loading}
-          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-        >
-          {status.loading ? 'Sending...' : 'Send for Signature'}
-        </button>
-      </form>
-
-      {status.error && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{status.error}</p>
-        </div>
-      )}
-
-      {status.success && status.signingUrl && (
-        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-md">
-          <p className="text-sm text-green-600 mb-4">
-            Document ready for signing!
-          </p>
-          <iframe
-            src={status.signingUrl}
-            width="100%"
-            height="800px"
-            className="border-0"
-          />
-        </div>
-      )}
     </div>
   );
 }

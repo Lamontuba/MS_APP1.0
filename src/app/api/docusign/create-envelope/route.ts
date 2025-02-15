@@ -1,51 +1,57 @@
-
 import { NextResponse } from 'next/server';
-import { getDocuSignToken } from '@/lib/docusign';
+import { sendEnvelopeToAdmin } from '@/lib/docusign-service';
+import type { FormData } from '@/lib/docusign-service';
 
 export async function POST(request: Request) {
   try {
-    const { templateId, templateData } = await request.json();
-    const accessToken = await getDocuSignToken();
-    const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
+    console.log('Starting envelope creation...');
+    
+    const body = await request.json();
+    console.log('Request body:', {
+      ...body,
+      formData: body.formData ? {
+        ...body.formData,
+        signature: body.formData.signature ? 'BASE64_SIGNATURE_DATA_HIDDEN' : undefined
+      } : undefined
+    });
 
-    const envelope = {
-      templateId: templateId,
-      templateRoles: [{
-        roleName: 'Merchant',
-        name: templateData.ownerName,
-        email: templateData.ownerEmail,
-        tabs: {
-          textTabs: Object.entries(templateData).map(([key, value]) => ({
-            tabLabel: key,
-            value: value
-          }))
-        }
-      }],
-      status: 'created'
-    };
-
-    const response = await fetch(
-      `https://demo.docusign.net/restapi/v2.1/accounts/${accountId}/envelopes`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+    if (!body.formData) {
+      console.error('Missing form data in request');
+      return NextResponse.json(
+        { 
+          message: 'Form data is required',
+          error: 'validation_error'
         },
-        body: JSON.stringify(envelope)
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to create envelope');
+        { status: 400 }
+      );
     }
 
-    const data = await response.json();
-    return NextResponse.json(data);
+    console.log('Sending envelope to DocuSign...');
+    const result = await sendEnvelopeToAdmin(body.formData);
+    console.log('Envelope sent successfully:', result);
+    
+    return NextResponse.json(result);
   } catch (error) {
-    console.error('Error creating envelope:', error);
+    console.error('Error in create-envelope route:', error);
+    
+    // Check if it's an authentication error
+    if (error instanceof Error && error.message.includes('consent')) {
+      return NextResponse.json(
+        {
+          message: 'DocuSign authentication required. Please grant consent.',
+          error: 'auth_required',
+          details: error.message
+        },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Failed to create envelope' },
+      {
+        message: 'Failed to send envelope',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error : undefined
+      },
       { status: 500 }
     );
   }
