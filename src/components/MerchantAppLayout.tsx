@@ -7,7 +7,7 @@ import {
   Layers, ChevronRight, LogOut 
 } from 'lucide-react';
 import FastApp from "@/components/tools/FastApp/FastApp";
-import DashboardTool from "@/components/tools/Dashboard/DashboardTool";
+
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import AIFloatingButton from '@/components/AIFloatingButton';
@@ -37,7 +37,7 @@ const MerchantAppLayout = () => {
       icon: <Home className="w-10 h-10 text-white drop-shadow-glow" />,
       accent: "from-cyan-400 via-blue-500 to-blue-600",
       description: 'Performance overview',
-      component: <DashboardTool />,
+      component: <div>Dashboard Content</div>,
       statsIcon: <TrendingUp className="w-10 h-10 text-cyan-300 drop-shadow-glow" />,
       stats: [{ label: 'Revenue', value: '$124,350' }, { label: 'Leads', value: '42' }]
     },
@@ -121,7 +121,7 @@ const MerchantAppLayout = () => {
               ))}
             </div>
             <button 
-              onClick={() => signOut(auth)}
+              onClick={() => auth && signOut(auth)}
               className="p-4 flex items-center text-red-400 hover:bg-white/5 transition-all duration-300 border-t border-white/5"
             >
               <LogOut className="w-5 h-5 mr-3" />

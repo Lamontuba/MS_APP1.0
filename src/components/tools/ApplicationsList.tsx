@@ -4,17 +4,33 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function ApplicationsList() {
-  const [applications, setApplications] = useState([]);
+  interface Application {
+    id: string;
+    businessName: string;
+    status: string;
+    createdAt: any;
+  }
+
+  const [applications, setApplications] = useState<Application[]>([]);
 
   useEffect(() => {
     const fetchApplications = async () => {
-      const q = query(collection(db, "applications"));
-      const querySnapshot = await getDocs(q);
-      const apps = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setApplications(apps);
+      if (db) {
+        const q = query(collection(db, "applications"));
+        const querySnapshot = await getDocs(q);
+        const apps = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            businessName: data.businessName,
+            status: data.status,
+            createdAt: data.createdAt
+          };
+        });
+        setApplications(apps);
+      } else {
+        console.error("Firestore database is not initialized");
+      }
     };
 
     fetchApplications();
