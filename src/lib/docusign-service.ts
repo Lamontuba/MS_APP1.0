@@ -37,13 +37,11 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
     const accountId = process.env.DOCUSIGN_ACCOUNT_ID;
     const templateId = process.env.DOCUSIGN_TEMPLATE_ID;
     const adminEmail = process.env.DOCUSIGN_ADMIN_EMAIL || 'admin@example.com';
-    const baseUrl = process.env.DOCUSIGN_BASE_PATH || 'https://demo.docusign.net';
 
     console.log('DocuSign Configuration:', {
       accountId,
       templateId,
       adminEmail,
-      baseUrl,
       hasAccessToken: !!accessToken
     });
 
@@ -96,7 +94,7 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
       }]
     }, null, 2));
 
-    const url = `${baseUrl}/restapi/v2.1/accounts/${accountId}/envelopes`;
+    const url = `https://demo.docusign.net/restapi/v2.1/accounts/${accountId}/envelopes`;
     console.log('DocuSign API URL:', url);
 
     const response = await fetch(url, {
