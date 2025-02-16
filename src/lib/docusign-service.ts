@@ -23,6 +23,10 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
     const templateId = process.env.DOCUSIGN_TEMPLATE_ID;
     const adminEmail = process.env.DOCUSIGN_ADMIN_EMAIL || 'fpaocretv@gmail.com';
 
+    if (!accountId || !templateId) {
+      throw new Error('Missing DocuSign configuration');
+    }
+
     console.log('DocuSign Configuration:', {
       accountId,
       templateId,
@@ -35,13 +39,17 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
       }
     });
 
-    if (!accountId || !templateId) {
-      throw new Error('Missing DocuSign configuration');
-    }
+    // Convert signatures to base64 format if they're not already
+    const signature1Image = formData.signature1.includes('base64,') 
+      ? formData.signature1.split(',')[1] 
+      : formData.signature1;
+    const signature2Image = formData.signature2.includes('base64,') 
+      ? formData.signature2.split(',')[1] 
+      : formData.signature2;
 
-    // Convert signatures to base64 format
-    const signature1Image = formData.signature1.split(',')[1];
-    const signature2Image = formData.signature2.split(',')[1];
+    // Log signature data for debugging
+    console.log('Signature 1 length:', signature1Image?.length);
+    console.log('Signature 2 length:', signature2Image?.length);
 
     const envelope = {
       templateId,
@@ -54,51 +62,50 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
         tabs: {
           textTabs: [
             {
-              documentId: '1',
-              pageNumber: '1',
-              xPosition: '150',
-              yPosition: '300',
-              font: 'helvetica',
-              fontSize: 'size11',
-              value: formData.email
+              anchorString: 'Email:',
+              anchorUnits: 'pixels',
+              anchorXOffset: '100',
+              anchorYOffset: '0',
+              value: formData.email,
+              locked: true
             },
             {
-              documentId: '1',
-              pageNumber: '1',
-              xPosition: '150',
-              yPosition: '350',
-              font: 'helvetica',
-              fontSize: 'size11',
-              value: formData.phone
+              anchorString: 'Phone:',
+              anchorUnits: 'pixels',
+              anchorXOffset: '100',
+              anchorYOffset: '0',
+              value: formData.phone,
+              locked: true
             },
             {
-              documentId: '1',
-              pageNumber: '1',
-              xPosition: '150',
-              yPosition: '450',
-              font: 'helvetica',
-              fontSize: 'size11',
-              value: formData.date
+              anchorString: 'Date:',
+              anchorUnits: 'pixels',
+              anchorXOffset: '100',
+              anchorYOffset: '0',
+              value: formData.date,
+              locked: true
             }
           ],
-          signatureTabs: [
+          stampTabs: [
             {
-              documentId: '1',
-              pageNumber: '1',
-              xPosition: '150',
-              yPosition: '400',
-              name: formData.email,
-              optional: false,
-              signatureBase64: signature1Image
+              anchorString: 'Signature:',
+              anchorUnits: 'pixels',
+              anchorXOffset: '100',
+              anchorYOffset: '0',
+              stampImageBase64: signature1Image,
+              stampType: 'signature',
+              imageType: 'signature',
+              locked: true
             },
             {
-              documentId: '1',
-              pageNumber: '1',
-              xPosition: '150',
-              yPosition: '550',
-              name: formData.email,
-              optional: false,
-              signatureBase64: signature2Image
+              anchorString: 'By signing this document',
+              anchorUnits: 'pixels',
+              anchorXOffset: '0',
+              anchorYOffset: '20',
+              stampImageBase64: signature2Image,
+              stampType: 'signature',
+              imageType: 'signature',
+              locked: true
             }
           ]
         }
@@ -111,9 +118,9 @@ export async function sendEnvelopeToAdmin(formData: FormData): Promise<any> {
         ...envelope.templateRoles[0],
         tabs: {
           ...envelope.templateRoles[0].tabs,
-          signatureTabs: envelope.templateRoles[0].tabs.signatureTabs.map(tab => ({
+          stampTabs: envelope.templateRoles[0].tabs.stampTabs.map(tab => ({
             ...tab,
-            signatureBase64: '[SIGNATURE_DATA_HIDDEN]'
+            stampImageBase64: '[SIGNATURE_DATA_HIDDEN]'
           }))
         }
       }]
